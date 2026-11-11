@@ -1,0 +1,36 @@
+# Implantação automática no VPS: quando o CI passa em um push no main, conecta por SSH e roda o instalar_atualizar.
+# Segredos necessários (Settings > Secrets and variables > Actions): VPS_HOST, VPS_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS.
+# Sem eles, o job é ignorado (não falha). Passo a passo em docs/DEPLOY_AUTOMATICO.md.
+name: deploy
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+concurrency: {group: deploy-vps, cancel-in-progress: false}
+permissions: {contents: read}
+jobs:
+  vps:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+    steps:
+      - name: Conferir segredos
+        id: chk
+        run: |
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ]; then echo "Segredos do VPS não configurados: implantação ignorada."; echo "go=no" >> "$GITHUB_OUTPUT"; else echo "go=yes" >> "$GITHUB_OUTPUT"; fi
+      - name: Implantar por SSH
+        if: steps.chk.outputs.go == 'yes'
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          DEPLOY_CMD: ${{ vars.VPS_DEPLOY_CMD }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          CMD="${DEPLOY_CMD:-instalar_atualizar -repertorio_git https://github.com/${GITHUB_REPOSITORY} -porta 7012 -subdominio talks.m3d.pro}"
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "$CMD"
