@@ -1,21 +1,22 @@
-# Implantação automática (GitHub → VPS)
+# Implantação automática GitHub → VPS
 
-A cada push no `main` o GitHub roda o CI; se passar, o workflow `deploy` entra no VPS por SSH e executa o `instalar_atualizar` (git pull, npm install, PM2, Nginx). Também dá para disparar manualmente: aba **Actions → deploy → Run workflow**.
+Fluxo: `git push` no `main` → CI passa → workflow `deploy` conecta por SSH no VPS (159.223.22.82) → o comando `talk-deploy` atualiza o código, reinicia o app e garante que o proxy do subdomínio aponte para a porta certa.
 
-## Configurar (uma vez)
-1. **No seu computador ou no VPS**, crie uma chave só para isso: `ssh-keygen -t ed25519 -f deploy_talk -C "github-deploy" -N ""`.
-2. **No VPS**, autorize a chave **restringindo-a a este comando** (em `~/.ssh/authorized_keys` do usuário de deploy):
-   `command="/usr/local/bin/instalar_atualizar -repertorio_git https://github.com/LACibermedicina/talk -porta 7012 -subdominio talks.m3d.pro",no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding ssh-ed25519 AAAA… github-deploy`
-   Assim, mesmo que a chave vaze, ela só consegue rodar a atualização. Se o usuário não for root, dê a ele `sudo` sem senha só para esse script.
-3. **No GitHub** (repositório → Settings → Secrets and variables → Actions → Secrets):
-   - `VPS_HOST`: IP ou domínio do VPS; `VPS_USER`: usuário (por exemplo `root` ou `deploy`)
-   - `VPS_SSH_KEY`: conteúdo de `deploy_talk` (a chave **privada**)
-   - `VPS_KNOWN_HOSTS`: saída de `ssh-keyscan -t ed25519 SEU_HOST` (confira a impressão digital com `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` no VPS)
-   - opcional, em *Variables*: `VPS_DEPLOY_CMD` para outro comando.
-4. Apague `deploy_talk` do computador depois de colar o segredo.
+## 1. No VPS (uma vez, como root)
+```
+curl -fsSL https://raw.githubusercontent.com/LACibermedicina/talk/main/deploy/vps-setup-deploy.sh -o /root/vps-setup-deploy.sh
+bash /root/vps-setup-deploy.sh
+```
+O script: remove chaves antigas `github-deploy`; mantém a porta 7012 (se outro serviço a usar, escolhe a próxima livre ≥ 1024, nunca portas < 1000, que ficam para o IP público/proxy); cria `/usr/local/bin/talk-deploy`; gera uma chave nova presa a esse comando; imprime os 4 valores dos segredos.
+Para outra porta: `PORTA=7020 bash /root/vps-setup-deploy.sh` ou edite `/etc/talk-deploy.conf` e rode `talk-deploy`.
 
-## Observações
-- Sem os segredos, o job termina sem erro e sem implantar.
-- Cada implantação reinicia o PM2: usuários conectados perdem a conexão por alguns segundos. As migrações do banco rodam sozinhas ao iniciar. Faça push fora do horário de atendimento, ou use o disparo manual.
-- O workflow só roda após o CI passar no `main`. Não implanta pull requests.
-- Para voltar a uma versão anterior: `git revert` no GitHub e novo push, ou no VPS `git reset --hard <commit>` e `pm2 restart talk`.
+## 2. No GitHub
+Settings → Secrets and variables → Actions → New repository secret: `VPS_HOST` (159.223.22.82), `VPS_USER` (root), `VPS_KNOWN_HOSTS`, `VPS_SSH_KEY` (privada completa com BEGIN/END). Depois apague a privada do VPS: `shred -u /root/.ssh/github_deploy_talk`.
+
+## 3. Testar
+Actions → deploy → Run workflow. O log termina com `✔ app respondendo na porta …`. Se falhar: `pm2 logs talk`, `nginx -t`.
+
+## Notas
+- A chave só consegue rodar `talk-deploy` (sem terminal, sem túnel). Cada troca de proxy gera `.bak.<data>` ao lado do arquivo do Nginx.
+- Mudar a porta altera só `/etc/talk-deploy.conf`; o proxy de `talks.m3d.pro` é reescrito automaticamente.
+- Nunca cole a chave privada em conversas ou issues.

@@ -32,5 +32,6 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          CMD="${DEPLOY_CMD:-instalar_atualizar -repertorio_git https://github.com/${GITHUB_REPOSITORY} -porta 7012 -subdominio talks.m3d.pro}"
+          # A chave só executa o comando talk-deploy do VPS (porta e proxy ficam em /etc/talk-deploy.conf); o texto abaixo é ignorado por ele.
+          CMD="${DEPLOY_CMD:-talk-deploy}"
           ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "$CMD"
