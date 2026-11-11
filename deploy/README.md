@@ -15,7 +15,7 @@ Objetivo: o sistema roda **isolado** (recursos limitados, processos separados, s
 | VPS sem Docker, quer processos gerenciados leves | **Oxmgr + systemd** (`deploy/oxmgr`) |
 
 ## 1) Docker Compose (limites incluídos)
-`docker compose up -d --build`. Serviços: `app` (768 MB / 1,5 CPU), `worker` (256 MB / 0,3 CPU), `caddy` (128 MB). Ajuste com `APP_MEM`, `APP_CPUS`, `WORKER_MEM`, `WORKER_CPUS`. Há healthcheck, `init`, logs rotativos (3×10 MB), sistema de arquivos somente leitura, sem capacidades Linux. O instalador do navegador continua valendo (config em `appdata`).
+`docker compose up -d --build`. Serviços: `app` (768 MB / 1 CPU), `worker` (256 MB / 0,3 CPU), `caddy` (128 MB). Ajuste com `APP_MEM`, `APP_CPUS`, `WORKER_MEM`, `WORKER_CPUS`. Há healthcheck, `init`, logs rotativos (3×10 MB), sistema de arquivos somente leitura, sem capacidades Linux. O instalador do navegador continua valendo (config em `appdata`).
 
 ## 2) Kubernetes
 1. Construa e publique a imagem: `docker build -t REGISTRY/talk-m3d:TAG . && docker push …`; troque `REGISTRY/talk-m3d:TAG` nos YAML.

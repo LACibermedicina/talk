@@ -6,11 +6,11 @@ test('arquivos de implantação existem', () => { for (const f of ['docker-compo
 test('web sem jobs e worker único em todos os modos', () => {
   assert.match(rd('docker-compose.yml'), /RUN_JOBS: "false"/); assert.match(rd('deploy/k8s/20-web.yaml'), /RUN_JOBS[\s\S]{0,20}"false"/); assert.match(rd('deploy/oxmgr/oxfile.toml'), /RUN_JOBS=false/);
   assert.match(rd('deploy/k8s/20-web.yaml'), /replicas: 1/); assert.match(rd('deploy/k8s/30-worker.yaml'), /replicas: 1/); assert.match(rd('deploy/k8s/20-web.yaml'), /type: Recreate/);
-  assert.match(rd('src/server.js'), /RUN_JOBS !== 'false'/);
+  assert.match(rd('src/app.js'), /RUN_JOBS !== 'false'/);
 });
 test('limites de recursos e sondas de saúde definidos', () => {
   assert.match(rd('docker-compose.yml'), /mem_limit/); assert.match(rd('deploy/k8s/20-web.yaml'), /limits:/); assert.match(rd('deploy/k8s/20-web.yaml'), /readinessProbe/); assert.match(rd('deploy/oxmgr/talk-m3d.service'), /MemoryMax=/);
-  assert.match(rd('src/server.js'), /\/api\/health/); assert.match(rd('src/boot/server.js'), /\/api\/health/);
+  assert.match(rd('src/app.js'), /\/api\/health/); assert.match(rd('src/boot/server.js'), /\/api\/health/);
 });
 test('oxfile usa só campos documentados e tem os dois processos', () => {
   const t = rd('deploy/oxmgr/oxfile.toml'); assert.equal((t.match(/\[\[apps\]\]/g) || []).length, 2); assert.match(t, /name = "talk-web"/); assert.match(t, /name = "talk-worker"/); assert.match(t, /^version = 1/m);

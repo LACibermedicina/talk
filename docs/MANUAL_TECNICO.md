@@ -265,3 +265,14 @@ Todas as rotas exigem sessão, salvo login, cadastro, status do setup, verifica�
 
 ## 10. Limites conhecidos
 Assinatura de receita é eletrônica simples (hash + QR), não ICP-Brasil; e-mail não é verificado no cadastro; sem push; uma instância por vez; a IA é apoio à decisão e exige revisão; tradução/guarani exigem revisão humana; interações medicamentosas em lista curta; **o servidor de instalação, as rotas de créditos/credenciais e a migração 013 foram verificados por testes unitários e sintaxe, mas ainda não exercitados contra um banco e Docker reais**: execute o roteiro acima numa instalação de homologação antes de produção.
+
+### Qual usuário e senha usar após instalar?
+- **Pelo assistente (normal):** no passo "Quem vai usar o sistema?" você define o usuário do root (padrão `root`), nome e e-mail, e escolhe **gerar senha temporária** (recomendado) ou a sua. Na última tela aparecem as credenciais **uma única vez**: copie. No primeiro login o sistema pede uma senha nova (12+ caracteres).
+- **Não anotou, ou o assistente não abriu:** rode no servidor `docker compose exec app node src/reset-root.js` (sem Docker: `node src/reset-root.js`). Ele gera uma senha temporária nova para o root, ou cria o root se não existir, e a mostra no terminal.
+
+### Sem Docker: PM2 + Nginx (ex.: script `instalar_atualizar`)
+- `node src/server.js` (ou `npm start`) é o ponto de entrada e **abre o instalador no navegador** se faltar configuração; a aplicação em si está em `src/app.js`. Defina a porta com `PORT` (padrão 3000): `PORT=7012 pm2 start src/server.js --name talk`.
+- Código do instalador: `pm2 logs talk --lines 50 | grep INSTALAÇÃO`. Configuração e chaves ficam em `data/config.env` (0600; faça backup da `DATA_KEY`).
+- O Nginx precisa repassar WebSocket (`proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_http_version 1.1;`) e `X-Forwarded-Proto`.
+- Erro `self-signed certificate` (`DEPTH_ZERO_SELF_SIGNED_CERT`) ao conectar no banco: comum em PostgreSQL instalado no próprio servidor (Debian/Ubuntu geram certificado autoassinado). No instalador, desmarque "Exigir conexão criptografada" (banco local) ou defina `PGSSL=false`. Com Neon o certificado é válido e a opção deve ficar marcada.
+- `node src/migrate.js` solto, sem variáveis, não funciona: o próprio sistema aplica as migrações ao iniciar.

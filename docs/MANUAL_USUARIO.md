@@ -65,3 +65,7 @@ Você só vê os dados a que seu perfil dá direito; profissionais veem apenas p
 - **Não aparece uma função:** ela não faz parte do seu perfil; use o botão Ajuda.
 - **A tela pediu créditos:** seu teste ou plano acabou; escolha um plano em Créditos.
 - **Vídeo sem imagem:** permita câmera e microfone no navegador (exige HTTPS).
+
+### Qual usuário e senha usar após instalar?
+- **Pelo assistente (normal):** no passo "Quem vai usar o sistema?" você define o usuário do root (padrão `root`), nome e e-mail, e escolhe **gerar senha temporária** (recomendado) ou a sua. Na última tela aparecem as credenciais **uma única vez**: copie. No primeiro login o sistema pede uma senha nova (12+ caracteres).
+- **Não anotou, ou o assistente não abriu:** rode no servidor `docker compose exec app node src/reset-root.js` (sem Docker: `node src/reset-root.js`). Ele gera uma senha temporária nova para o root, ou cria o root se não existir, e a mostra no terminal.

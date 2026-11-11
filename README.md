@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# talk
-=======
 # Talk.M3D — pacote de instalação (servidor + web app)
 
 Messenger clínico em três colunas (conversas · chat/agenda · painel do paciente), com teleconsulta, agenda com arrastar e soltar, notas, financeiro, auditoria e IA com failsafe. Web app instalável (PWA) servido pelo próprio servidor.
@@ -279,4 +276,14 @@ Ao abrir uma funcionalidade do dock, ela **começa sem quadros abertos**; os qua
 - Planos (editáveis): Básico (grátis; sem IA), Essencial R$ 59/mês ou R$ 19/semana (IA de apoio), Profissional R$ 149/mês ou R$ 45/semana (protocolos, caso, familiograma), Clínica R$ 399/mês ou R$ 119/semana (equipe e auditoria). Planos gratuitos renovam sozinhos; pagos exigem novo pagamento (PayPal, ou confirmação manual do administrador).
 - Migração nova: `db/012_creditos.sql` (aplicada pelo assistente/AUTO_MIGRATE).
 - Rotas: `/api/billing/*` (usuário e embaixador) e `/api/admin/billing/*` (planos, custos, usuários, distribuição, tokens, pedidos, extrato).
->>>>>>> 7a1d2a7 (Upload automático via script SSH)
+
+### Qual usuário e senha usar após instalar?
+- **Pelo assistente (normal):** no passo "Quem vai usar o sistema?" você define o usuário do root (padrão `root`), nome e e-mail, e escolhe **gerar senha temporária** (recomendado) ou a sua. Na última tela aparecem as credenciais **uma única vez**: copie. No primeiro login o sistema pede uma senha nova (12+ caracteres).
+- **Não anotou, ou o assistente não abriu:** rode no servidor `docker compose exec app node src/reset-root.js` (sem Docker: `node src/reset-root.js`). Ele gera uma senha temporária nova para o root, ou cria o root se não existir, e a mostra no terminal.
+
+### Sem Docker: PM2 + Nginx (ex.: script `instalar_atualizar`)
+- `node src/server.js` (ou `npm start`) é o ponto de entrada e **abre o instalador no navegador** se faltar configuração; a aplicação em si está em `src/app.js`. Defina a porta com `PORT` (padrão 3000): `PORT=7012 pm2 start src/server.js --name talk`.
+- Código do instalador: `pm2 logs talk --lines 50 | grep INSTALAÇÃO`. Configuração e chaves ficam em `data/config.env` (0600; faça backup da `DATA_KEY`).
+- O Nginx precisa repassar WebSocket (`proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_http_version 1.1;`) e `X-Forwarded-Proto`.
+- Erro `self-signed certificate` (`DEPTH_ZERO_SELF_SIGNED_CERT`) ao conectar no banco: comum em PostgreSQL instalado no próprio servidor (Debian/Ubuntu geram certificado autoassinado). No instalador, desmarque "Exigir conexão criptografada" (banco local) ou defina `PGSSL=false`. Com Neon o certificado é válido e a opção deve ficar marcada.
+- `node src/migrate.js` solto, sem variáveis, não funciona: o próprio sistema aplica as migrações ao iniciar.
