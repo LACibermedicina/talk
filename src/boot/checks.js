@@ -1,13 +1,13 @@
 // Verificações do servidor antes da instalação. Cada item explica POR QUE importa (why) e COMO resolver (fix).
 import os from 'node:os';
-import { accessSync, constants, existsSync } from 'node:fs';
+import { accessSync, constants, existsSync, mkdirSync } from 'node:fs';
 import dns from 'node:dns/promises';
 import { dataDir, originOf } from './config.js';
 const item = (id, t, ok, level, detail, why, fix) => ({ id, t, ok: !!ok, level, detail, why, fix });
 export async function bootChecks(req) {
   const C = [], h = req.headers || {}, proto = String(h['x-forwarded-proto'] || 'http').split(',')[0], origin = originOf(h);
   C.push(item('node', 'Node.js 22 ou superior', +process.versions.node.split('.')[0] >= 22, 'req', 'Versão ' + process.versions.node, 'O sistema usa recursos modernos do Node (módulos ES, fetch, crypto). Versões antigas falham ao iniciar.', 'Use a imagem node:22 do Dockerfile (docker compose build --no-cache app).'));
-  let w = false; try { accessSync(dataDir(), constants.W_OK); w = true; } catch { /* sem escrita */ }
+  let w = false; try { mkdirSync(dataDir(), { recursive: true }); accessSync(dataDir(), constants.W_OK); w = true; } catch { /* sem escrita */ }
   C.push(item('data', 'Pasta de configuração com permissão de escrita', w, 'req', dataDir(), 'É onde o instalador guarda as chaves de segurança que você vai gerar. Sem escrita, a instalação não pode ser salva e se perderia a cada reinício.', 'No docker-compose.yml mantenha o volume "appdata:/app/data". Fora do Docker: mkdir -p data && chown seu_usuario data.'));
   C.push(item('mem', 'Memória de 512 MB ou mais', os.totalmem() >= 480 * 2 ** 20, 'rec', Math.round(os.totalmem() / 2 ** 20) + ' MB', 'O servidor, a criptografia de senhas (argon2) e a geração de PDFs consomem memória; abaixo disso podem ocorrer quedas durante consultas.', 'Use um servidor com 1 GB ou mais.'));
   C.push(item('root', 'Roda sem privilégio de root', typeof process.getuid === 'function' && process.getuid() !== 0, 'rec', 'uid ' + (process.getuid ? process.getuid() : '?'), 'Se alguém explorar uma falha no app, um processo sem privilégios limita o estrago ao próprio contêiner.', 'Mantenha "USER node" no Dockerfile.'));
