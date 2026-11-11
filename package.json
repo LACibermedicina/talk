@@ -1,0 +1,35 @@
+{
+ "name": "talk-m3d-server",
+ "version": "1.0.0",
+ "type": "module",
+ "private": true,
+ "engines": {
+  "node": ">=22"
+ },
+ "scripts": {
+  "start": "node src/start.js",
+  "seed": "node src/seed.js",
+  "migrate": "node src/migrate.js",
+  "postinstall": "node scripts/vendor.js",
+  "check": "node scripts/check.js",
+  "test": "node --test"
+ },
+ "dependencies": {
+  "@fastify/cookie": "^11.0.0",
+  "@fastify/helmet": "^13.0.0",
+  "@fastify/jwt": "^9.0.0",
+  "@fastify/multipart": "^9.0.0",
+  "@fastify/rate-limit": "^10.0.0",
+  "@fastify/websocket": "^11.0.0",
+  "argon2": "^0.41.0",
+  "fastify": "^5.0.0",
+  "pdfkit": "^0.15.0",
+  "pg": "^8.12.0",
+  "qrcode": "^1.5.4",
+  "zod": "^3.23.0",
+  "agora-token": "^2.0.5",
+  "@fastify/static": "^8.0.0",
+  "agora-rtc-sdk-ng": "^4.22.0"
+ },
+ "description": "Talk.M3D: messenger clínico com teleconsulta, agenda, receitas com QR, rotinas e IA com plano B"
+}

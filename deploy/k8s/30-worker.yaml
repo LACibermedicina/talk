@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: talk-worker, namespace: talk-m3d, labels: {app: talk, role: worker}}
+spec:
+  replicas: 1                       # jobs em dobro enviariam SMS em duplicidade
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: talk, role: worker}}
+  template:
+    metadata: {labels: {app: talk, role: worker}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: worker
+          image: REGISTRY/talk-m3d:TAG
+          command: ["node", "src/worker.js"]
+          envFrom:
+            - configMapRef: {name: talk-m3d-config}
+            - secretRef: {name: talk-m3d-secret}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 300m, memory: 256Mi}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {medium: Memory, sizeLimit: 32Mi}}]

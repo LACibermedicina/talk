@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: talk-web, namespace: talk-m3d, labels: {app: talk, role: web}}
+spec:
+  replicas: 1                       # não aumente: presença e WebSocket vivem na memória do processo
+  strategy: {type: Recreate}        # nunca dois pods ao mesmo tempo
+  selector: {matchLabels: {app: talk, role: web}}
+  template:
+    metadata: {labels: {app: talk, role: web}}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: web
+          image: REGISTRY/talk-m3d:TAG        # construa com: docker build -t REGISTRY/talk-m3d:TAG .
+          imagePullPolicy: IfNotPresent
+          ports: [{containerPort: 3000, name: http}]
+          env:
+            - {name: RUN_JOBS, value: "false"}
+            - {name: DATA_DIR, value: /app/data}
+          envFrom:
+            - configMapRef: {name: talk-m3d-config}
+            - secretRef: {name: talk-m3d-secret}
+          resources:
+            requests: {cpu: 250m, memory: 384Mi}
+            limits: {cpu: "1500m", memory: 768Mi}
+          startupProbe: {httpGet: {path: /api/health, port: http}, failureThreshold: 30, periodSeconds: 3}
+          readinessProbe: {httpGet: {path: "/api/health?deep=1", port: http}, periodSeconds: 10, timeoutSeconds: 3, failureThreshold: 3}
+          livenessProbe: {httpGet: {path: /api/health, port: http}, periodSeconds: 20, timeoutSeconds: 3, failureThreshold: 3}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          volumeMounts:
+            - {name: data, mountPath: /app/data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - {name: data, persistentVolumeClaim: {claimName: talk-data}}
+        - {name: tmp, emptyDir: {medium: Memory, sizeLimit: 64Mi}}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: talk-data, namespace: talk-m3d}
+spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: 1Gi}}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: talk-web, namespace: talk-m3d}
+spec:
+  selector: {app: talk, role: web}
+  ports: [{name: http, port: 80, targetPort: http}]

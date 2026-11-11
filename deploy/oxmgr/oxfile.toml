@@ -1,0 +1,18 @@
+# Talk.M3D sob o Oxmgr (gerenciador de processos em Rust, alternativa ao PM2). Valide com: oxmgr validate ./oxfile.toml
+# Usei apenas os campos documentados na página do projeto (name, command, restart_policy, max_restarts, stop_timeout_secs).
+# Variáveis (DATA_DIR, DATABASE_URL…) vêm do ambiente do serviço (systemd) ou de data/config.env, gravado pelo instalador.
+version = 1
+
+[[apps]]
+name = "talk-web"
+command = "env RUN_JOBS=false node src/start.js"
+restart_policy = "on_failure"
+max_restarts = 10
+stop_timeout_secs = 30
+
+[[apps]]
+name = "talk-worker"
+command = "node src/worker.js"
+restart_policy = "on_failure"
+max_restarts = 10
+stop_timeout_secs = 10

@@ -1,0 +1,10 @@
+alter table users add column reg_conselho text, add column reg_numero text, add column reg_uf text, add column sign_img text, add column icp_ref text;
+alter table documents add column token text unique, add column max_uses int not null default 1 check(max_uses between 1 and 12), add column uses int not null default 0, add column valid_until timestamptz, add column status text not null default 'ativa' check(status in('ativa','esgotada','cancelada'));
+update documents set token=md5(random()::text||id::text)||md5(id::text) where token is null;
+create table document_uses(id bigserial primary key,document_id uuid not null references documents(id),at timestamptz not null default now(),action text not null check(action in('utilizada','nao_utilizada')),by_name text not null,by_place text,ip text);
+create index on document_uses(document_id,at desc);
+create table routines(id uuid primary key default gen_random_uuid(),patient_id uuid not null references users(id),professional_id uuid not null references users(id),title text not null,token text unique not null,status text not null default 'ativa' check(status in('ativa','concluida','cancelada')),created_at timestamptz not null default now(),finished_at timestamptz);
+create table routine_items(id uuid primary key default gen_random_uuid(),routine_id uuid not null references routines(id) on delete cascade,position int not null,title text not null,exercise_id uuid references exercises(id),sessions int not null check(sessions between 1 and 60),done int not null default 0,unique(routine_id,position));
+create table routine_events(id bigserial primary key,item_id uuid not null references routine_items(id) on delete cascade,at timestamptz not null default now(),action text not null check(action in('concluida','nao_realizada')),by_name text not null,note text);
+create table notifications(id uuid primary key default gen_random_uuid(),user_id uuid not null references users(id),kind text not null,title text not null,body text,patient_id uuid references users(id),ref text,created_at timestamptz not null default now(),read_at timestamptz);
+create index on notifications(user_id,created_at desc);

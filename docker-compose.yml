@@ -1,0 +1,65 @@
+# Banco = Neon (gerenciado). Vídeo = Agora (gerenciado). Só o app e o proxy rodam no seu servidor.
+# NÃO precisa de arquivo .env: suba com "docker compose up -d --build" e abra o endereço no navegador;
+# o instalador gera as chaves, testa o banco e grava tudo em um volume persistente (appdata).
+# Se preferir, crie um .env (veja .env.example): o que estiver nele tem prioridade sobre o instalador.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+      JWT_SECRET: "${JWT_SECRET:-}"
+      DATA_KEY: "${DATA_KEY:-}"
+      APP_ORIGIN: "${APP_ORIGIN:-}"
+      TZ: "${TZ:-}"
+      AUTO_MIGRATE: "${AUTO_MIGRATE:-true}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-}"
+      PGSSL: "${PGSSL:-}"
+      ALLOW_WEAK_PASSWORDS: "${ALLOW_WEAK_PASSWORDS:-}"
+      TEST_MODE: "${TEST_MODE:-}"
+      I18N_DAILY_LIMIT: "${I18N_DAILY_LIMIT:-}"
+      RUN_JOBS: "false"   # os jobs rodam no serviço "worker"
+    init: true
+    mem_limit: "${APP_MEM:-768m}"
+    cpus: "${APP_CPUS:-1.5}"
+    pids_limit: 256
+    healthcheck: {test: ["CMD","node","-e","fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"], interval: 30s, timeout: 5s, retries: 3, start_period: 40s}
+    logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}
+    read_only: true
+    ports: ["127.0.0.1:${APP_PORT:-7001}:3000"]
+    volumes: [./config:/app/config:ro, "appdata:/app/data"]
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+  worker:   # lembretes SMS, anomalias e renovação de planos; rode UMA instância
+    build: .
+    command: ["node","src/worker.js"]
+    restart: unless-stopped
+    depends_on: {app: {condition: service_started}}
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-}"
+      JWT_SECRET: "${JWT_SECRET:-}"
+      DATA_KEY: "${DATA_KEY:-}"
+      APP_ORIGIN: "${APP_ORIGIN:-}"
+      TZ: "${TZ:-}"
+      PGSSL: "${PGSSL:-}"
+    init: true
+    mem_limit: "${WORKER_MEM:-256m}"
+    cpus: "${WORKER_CPUS:-0.3}"
+    pids_limit: 128
+    read_only: true
+    volumes: ["appdata:/app/data:ro"]
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: "0.5"
+    logging: {driver: json-file, options: {max-size: "5m", max-file: "2"}}
+    environment: {DOMAIN: "${DOMAIN:-:80}"}
+    ports: ["${HTTP_PORT:-80}:80", "${HTTPS_PORT:-443}:443"]
+    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddydata:/data]
+volumes: {caddydata: {}, appdata: {}}

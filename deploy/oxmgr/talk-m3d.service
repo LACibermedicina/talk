@@ -1,0 +1,37 @@
+# /etc/systemd/system/talk-m3d.service — isola o sistema do resto do servidor (usuário próprio, limites de CPU/memória, sistema de arquivos protegido).
+[Unit]
+Description=Talk.M3D (Oxmgr: web + worker)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=talkm3d
+Group=talkm3d
+WorkingDirectory=/opt/talk-m3d
+Environment=NODE_ENV=production
+Environment=DATA_DIR=/var/lib/talk-m3d
+EnvironmentFile=-/etc/talk-m3d/env
+ExecStart=/usr/bin/env oxmgr runtime /opt/talk-m3d/deploy/oxmgr/oxfile.toml
+Restart=on-failure
+RestartSec=5
+# Limites: o sistema nunca toma o servidor inteiro
+MemoryMax=1G
+MemoryHigh=900M
+CPUQuota=200%
+TasksMax=512
+# Endurecimento
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/talk-m3d
+StateDirectory=talk-m3d
+StateDirectoryMode=0700
+LockPersonality=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+# A porta 3000 fica só no servidor; publique com Caddy/Nginx na frente (veja Caddyfile).
+
+[Install]
+WantedBy=multi-user.target

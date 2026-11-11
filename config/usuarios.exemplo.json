@@ -1,0 +1,25 @@
+{
+  "_ajuda": "Copie para config/usuarios.json, troque os e-mails e rode: node src/setup.js config/usuarios.json. Deixe 'senha' em branco: o sistema gera uma senha temporária por pessoa. Tipos: admin, medico, fisio, enfermeiro, nutricionista, farmaceutico, profissional (outro profissional de saúde), cuidador, recepcao (secretaria), funcionario (apoio, não profissional), paciente. 'cargo' é um rótulo livre exibido na tela.",
+  "usuarios": [
+    { "usuario": "root", "nome": "Administrador Root", "email": "root@exemplo.com.br", "tipo": "admin", "root": true },
+    { "nome": "Dra. Ana Costa", "email": "ana@exemplo.com.br", "tipo": "medico", "cargo": "Médica clínica geral" },
+    { "nome": "Carla Mendes", "email": "carla@exemplo.com.br", "tipo": "fisio", "cargo": "Fisioterapeuta" },
+    { "nome": "Beatriz Lima", "email": "beatriz@exemplo.com.br", "tipo": "enfermeiro", "cargo": "Enfermeira" },
+    { "nome": "Paulo Ramos", "email": "paulo@exemplo.com.br", "tipo": "nutricionista", "cargo": "Nutricionista" },
+    { "nome": "Farmácia Central", "email": "farmacia@exemplo.com.br", "tipo": "farmaceutico", "cargo": "Farmácia" },
+    { "nome": "Dr. Lucas Prado", "email": "lucas@exemplo.com.br", "tipo": "profissional", "cargo": "Psicólogo" },
+    { "nome": "Marta Souza", "email": "marta@exemplo.com.br", "tipo": "cuidador", "cargo": "Cuidadora" },
+    { "nome": "Júlia Nunes", "email": "julia@exemplo.com.br", "tipo": "recepcao", "cargo": "Secretária" },
+    { "nome": "Rafael Dias", "email": "rafael@exemplo.com.br", "tipo": "funcionario", "cargo": "Auxiliar administrativo" },
+    { "nome": "Sofia Almeida", "email": "sofia@exemplo.com.br", "tipo": "paciente", "telefone": "+5511999990000" }
+  ],
+  "vinculos": [
+    { "paciente": "sofia@exemplo.com.br", "profissional": "ana@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "carla@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "beatriz@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "paulo@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "farmacia@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "lucas@exemplo.com.br" },
+    { "paciente": "sofia@exemplo.com.br", "profissional": "marta@exemplo.com.br" }
+  ]
+}

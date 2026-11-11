@@ -1,0 +1,28 @@
+# Exige um Ingress Controller (ex.: ingress-nginx) e, para HTTPS automático, o cert-manager com um ClusterIssuer "letsencrypt".
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: talk
+  namespace: talk-m3d
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"     # WebSocket (chat e chamada)
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+spec:
+  ingressClassName: nginx
+  tls: [{hosts: [seu.dominio], secretName: talk-tls}]
+  rules:
+    - host: seu.dominio
+      http: {paths: [{path: /, pathType: Prefix, backend: {service: {name: talk-web, port: {name: http}}}}]}
+---
+# Só o ingress entra no web; web e worker saem para internet (banco, IA, Agora, PayPal, SMS), mas nada mais entra.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: talk-isolamento, namespace: talk-m3d}
+spec:
+  podSelector: {matchLabels: {app: talk}}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: ingress-nginx}}}]
+      ports: [{port: 3000}]

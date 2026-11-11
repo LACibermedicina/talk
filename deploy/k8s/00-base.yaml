@@ -1,0 +1,13 @@
+# Talk.M3D em Kubernetes. Aplique com: kubectl apply -k deploy/k8s   (veja deploy/README.md)
+# Regras importantes: UMA réplica de "web" (chat/presença ficam em memória) e UMA de "worker" (jobs).
+apiVersion: v1
+kind: Namespace
+metadata: {name: talk-m3d}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: talk-m3d-config, namespace: talk-m3d}
+data:
+  TZ: "America/Sao_Paulo"
+  AUTO_MIGRATE: "true"
+  NODE_ENV: "production"

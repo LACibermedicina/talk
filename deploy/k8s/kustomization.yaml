@@ -1,0 +1,4 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources: [00-base.yaml, 20-web.yaml, 30-worker.yaml, 40-ingress.yaml]
+# O secret é aplicado à parte (gen-secrets.sh), para nunca ir para o Git.

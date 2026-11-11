@@ -1,0 +1,11 @@
+import { createCipheriv, createDecipheriv, randomBytes, createHash, createHmac, timingSafeEqual } from 'node:crypto';
+const key = Buffer.from(process.env.DATA_KEY || '', 'base64');
+if (key.length !== 32) throw new Error('DATA_KEY deve ter 32 bytes em base64');
+export const enc = t => { const iv = randomBytes(12), c = createCipheriv('aes-256-gcm', key, iv); const b = Buffer.concat([c.update(String(t), 'utf8'), c.final()]); return Buffer.concat([iv, c.getAuthTag(), b]).toString('base64'); };
+export const dec = s => { const b = Buffer.from(s, 'base64'), d = createDecipheriv('aes-256-gcm', key, b.subarray(0, 12)); d.setAuthTag(b.subarray(12, 28)); return Buffer.concat([d.update(b.subarray(28)), d.final()]).toString('utf8'); };
+export const sha = x => createHash('sha256').update(typeof x === 'string' ? x : JSON.stringify(x)).digest('hex');
+const gk = createHash('sha256').update('guest:' + process.env.JWT_SECRET).digest();
+const mac = p => createHmac('sha256', gk).update(p).digest('base64url');
+export const seal = h => createHmac('sha256', gk).update('seal:' + h).digest('hex');
+export const signGuest = (o, sec) => { const p = Buffer.from(JSON.stringify({ ...o, exp: Date.now() + sec * 1000 })).toString('base64url'); return p + '.' + mac(p); };
+export const verifyGuest = t => { try { const [p, s] = t.split('.'), a = Buffer.from(s), b = Buffer.from(mac(p)); if (a.length !== b.length || !timingSafeEqual(a, b)) return null; const o = JSON.parse(Buffer.from(p, 'base64url')); return o.exp > Date.now() ? o : null; } catch { return null; } };
