@@ -67,7 +67,7 @@ function chatH() {
 const risk = a => a.noshow_risk == null ? 0 : +a.noshow_risk;
 function cardH(a, edit) {
   const sel = S.sel === 'a:' + a.id ? 'outline:2px solid var(--ac);' : '', d = edit ? `draggable="true" data-drag="a:${a.id}"` : '';
-  return `<div class="kc" ${d} data-a="sel" data-p="a:${a.id}" tabindex="0" role="button" aria-label="${E(a.patient)}, ${SL[a.status]}" style="background:${SC[a.status]};${sel}"><div class="kt">${edit ? `<span class="gr">${ic(G.grip, 12)}</span>` : ''}<b>${E(a.patient)}</b></div><div class="ki">${a.status === 'em_atendimento' ? ic(G.vid, 14) : ''}${a.note ? ic(G.note, 14) : ''}${risk(a) >= .4 ? ic(G.warn, 14) : ''}</div></div>`;
+  return `<div class="kc" ${d} data-a="sel" data-p="a:${a.id}" tabindex="0" role="button" aria-label="${E(a.patient)}, ${SL[a.status]}" style="background:${SC[a.status]};${sel}"><div class="kt">${edit ? `<span class="gr">${ic(G.grip, 12)}</span>` : ''}<b>${E(a.patient)}</b></div><div class="ki">${a.status === 'em_atendimento' ? ic(G.vid, 14) : ''}${a.call_info ? `<span title="${E(a.call_info)}">☎</span>` : ''}${a.note ? ic(G.note, 14) : ''}${risk(a) >= .4 ? ic(G.warn, 14) : ''}</div></div>`;
 }
 function noteH(n) { return `<div class="kc nt" draggable="true" data-drag="n:${n.id}" data-a="sel" data-p="n:${n.id}" tabindex="0" role="button" style="${S.sel === 'n:' + n.id ? 'outline:2px solid var(--ac);' : ''}"><div class="kt"><span class="gr">${ic(G.grip, 12)}</span>${ic(G.note, 13)}<b>${E(n.title)}</b></div><div class="kn">${E(n.body)}</div></div>`; }
 function gridH() {
@@ -81,6 +81,7 @@ function dtH() {
   if (k === 'n') { const n = S.ag.notes.find(x => x.id === id); if (!n) return ''; return `<div class="cd dtt"><div class="ah"><h3>Nota</h3><span><button data-a="delnote" data-p="${id}">Excluir</button> <button data-a="dclose">Fechar</button></span></div><label for="nt">Título</label><input id="nt" data-i="nt" data-p="${id}" value="${E(n.title)}" maxlength="80"><label for="nb">Texto</label><textarea id="nb" rows="5" data-i="nb" data-p="${id}">${E(n.body)}</textarea></div>`; }
   const a = S.ag.appointments.find(x => x.id === id); if (!a) return '';
   return `<div class="cd dtt"><div class="ah"><h3>${E(a.patient)} · <span class="mu">${E(a.professional)}</span></h3><button data-a="dclose">Fechar</button></div>
+  ${a.call_info ? `<div class="al">☎ ${E(a.call_info)}</div>` : ''}
   <div class="fld"><div><label for="st">Status</label><select id="st" data-c="status" data-p="${id}" ${edit ? '' : 'disabled'}>${Object.keys(SL).map(s => `<option value="${s}" ${s === a.status ? 'selected' : ''}>${SL[s]}</option>`).join('')}</select></div><div><label for="wh">Data e horário</label><input id="wh" type="datetime-local" data-c="when" data-p="${id}" value="${loc(a.starts_at)}" ${edit ? '' : 'disabled'}></div></div>
   <div style="margin:8px 0"><label style="margin:0">Risco de falta: ${Math.round(risk(a) * 100)}%</label><div style="height:8px;background:var(--ln);border-radius:4px"><div style="width:${risk(a) * 100}%;height:100%;border-radius:4px;background:${risk(a) >= .4 ? 'var(--er)' : 'var(--ac)'}"></div></div><div class="mu">Calculado pelo histórico; risco alto antecipa o lembrete por SMS.</div></div>
   ${edit ? `<label for="an">Notas do atendimento (cifradas)</label><textarea id="an" rows="4" data-i="note" data-p="${id}">${E(a.note)}</textarea>` : ''}
@@ -146,11 +147,24 @@ document.addEventListener('drop', e => { const s = e.target.closest && e.target.
 const CALL = {};
 async function join(t, aid) {
   if (!window.AgoraRTC) return toast('SDK de vídeo indisponível (execute npm install no servidor)');
-  const c = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }); Object.assign(CALL, { c, aid, mic: null, cam: null, scr: null, rec: false }); $('#rv').innerHTML = ''; $('#call').classList.add('on');
-  c.on('user-published', async (u, mt) => { await c.subscribe(u, mt); if (mt === 'video') { const d = document.createElement('div'); d.className = 'tile'; d.id = 'r' + u.uid; $('#rv').append(d); u.videoTrack.play(d); } else u.audioTrack.play(); });
-  c.on('user-unpublished', u => { const e = $('#r' + u.uid); if (e) e.remove(); });
-  await c.join(t.appId, t.channel, t.token, t.uid);
-  if (!t.observer) { [CALL.mic, CALL.cam] = await AgoraRTC.createMicrophoneAndCameraTracks(); await c.publish([CALL.mic, CALL.cam]); CALL.cam.play('lv'); }
+  if (CALL.c) await leave();
+  const c = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }); Object.assign(CALL, { c, aid, mic: null, cam: null, scr: null, rec: false }); $('#rv').innerHTML = ''; $('#lv').textContent = 'Você'; $('#call').classList.add('on');
+  c.on('user-published', async (u, mt) => { try { await c.subscribe(u, mt); } catch (e) { return toast('Não foi possível receber o vídeo do outro lado'); } if (mt === 'video') { let d = $('#r' + u.uid); if (!d) { d = document.createElement('div'); d.className = 'tile'; d.id = 'r' + u.uid; $('#rv').append(d); } u.videoTrack.play(d); } else u.audioTrack.play(); });
+  c.on('user-unpublished', (u, mt) => { if (mt === 'video') { const e = $('#r' + u.uid); if (e) e.remove(); } });
+  c.on('user-left', u => { const e = $('#r' + u.uid); if (e) e.remove(); });
+  // o token do Agora vale 2 h: renova sozinho antes de expirar
+  c.on('token-privilege-will-expire', async () => { try { const n = await api('/video/token', { m: 'POST', b: { appointmentId: aid } }); await c.renewToken(n.token); } catch { /* segue até expirar */ } });
+  try { await c.join(t.appId, t.channel, t.token, t.uid); } catch (e) { await leave(); return toast('Não foi possível entrar na chamada: ' + (e.message || e)); }
+  if (t.observer) return;
+  // câmera e microfone: se a câmera faltar ou for negada, segue só com o áudio (e avisa) em vez de derrubar a chamada
+  let mic = null, cam = null;
+  try { [mic, cam] = await AgoraRTC.createMicrophoneAndCameraTracks(); } catch (e) {
+    try { mic = await AgoraRTC.createMicrophoneAudioTrack(); toast('Câmera indisponível ou sem permissão: entrando só com áudio'); }
+    catch (e2) { await leave(); return toast('Permita o acesso ao microfone e à câmera no navegador para entrar na chamada'); }
+  }
+  CALL.mic = mic; CALL.cam = cam;
+  try { await c.publish([mic, cam].filter(Boolean)); } catch (e) { toast('Não foi possível enviar seu áudio/vídeo: ' + (e.message || e)); }
+  if (cam) cam.play('lv'); else $('#lv').textContent = 'Você (só áudio)';
 }
 async function callWith(id) { await run(async () => { const a = await api('/agenda/current?with=' + id), t = await api('/video/token', { m: 'POST', b: { appointmentId: a.id } }); await join(t, a.id); }); }
 async function leave() { CALL.rec = false; for (const k of ['mic', 'cam', 'scr']) if (CALL[k]) { CALL[k].close(); CALL[k] = null; } if (CALL.c) await CALL.c.leave().catch(() => {}); CALL.c = null; $('#call').classList.remove('on'); }
@@ -167,13 +181,13 @@ async function guestPage() {
 /* ---------- ações ---------- */
 const A = {
   menu: () => { S.lo = !S.lo; render(); }, np: () => { S.np = !S.np; render(); }, tab: p => { S.tab = p; render(); }, prontuario: () => { S.np = false; S.tab = 'res'; render(); },
-  out: async () => { await api('/logout', { m: 'POST' }).catch(() => {}); location.reload(); },
+  out: async () => { try { if (ws) { ws.onclose = null; ws.close(); } } catch { /* já fechado */ } await api('/logout', { m: 'POST' }).catch(() => {}); location.reload(); },
   peer: id => run(() => openPeer(id)), chan: id => run(async () => { const c = S.ch.find(x => x.id === id); await setRoom({ key: 'ch:' + id, name: '# ' + c.name, channel: true }); render(); }),
   view: p => run(async () => { S.view = p; S.lo = 0; if (p === 'agenda') await loadWeek(); if (p === 'audit') { S.aud = await api('/audit?limit=100'); S.alr = await api('/alerts'); } if (p === 'fin') S.fin = await api('/finance/summary?month=' + new Date().toISOString().slice(0, 7)); render(); }),
   tr: id => run(async () => { S.trn[id] = (await api(`/messages/${id}/translate?to=${window.I18N ? I18N.lang : (S.me.lang || 'pt')}`)).translated; render(); }),
   pinm: (id, el) => run(async () => { await api(`/messages/${id}/pin`, { m: 'PATCH', b: { pinned: el.dataset.q === '1' } }); S.msgs = await api('/messages?key=' + encodeURIComponent(S.room.key)); render(); }),
   call: () => S.room && S.room.peer && callWith(S.room.peer), callwith: id => callWith(id),
-  endcall: () => leave(), mute: () => { if (CALL.mic) CALL.mic.setEnabled(!CALL.mic.enabled); }, cam: () => { if (CALL.cam) CALL.cam.setEnabled(!CALL.cam.enabled); }, share: () => run(share),
+  endcall: () => leave(), mute: () => { if (CALL.mic) CALL.mic.setEnabled(!CALL.mic.enabled); }, cam: () => { if (CALL.cam) CALL.cam.setEnabled(!CALL.cam.enabled); else toast('Sem câmera nesta chamada'); }, share: () => run(share),
   rec: () => run(async () => { if (!S.me.ai_consent) { if (!confirm('Autorizo a transcrição do meu áudio por IA neste atendimento.')) return; await api('/me/consent', { m: 'PATCH', b: { aiConsent: true } }); S.me.ai_consent = true; } CALL.rec = !CALL.rec; $('#cmsg').textContent = CALL.rec ? 'Transcrição ativa (visível só ao médico).' : 'Transcrição pausada.'; recLoop(); }),
   gjoin: () => run(async () => { const t = await api('/video/guest', { m: 'POST', b: { token: location.pathname.split('/')[2] } }); await join(t); }),
   wk: p => run(async () => { S.wk += +p; S.sel = null; await loadWeek(); render(); }),

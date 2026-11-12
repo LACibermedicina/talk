@@ -10,6 +10,7 @@ import { q } from './db.js';
 import { startJobs } from './jobs.js';
 import { migrate } from './migrateLib.js';
 import { loadSettings } from './settings.js';
+import { touch } from './presence.js';
 import { initSetup } from './routes/setup.js';
 import { installBilling } from './billing.js';
 import { seedTest, testOn, TEST_USERS } from './testMode.js';
@@ -26,6 +27,7 @@ app.addHook('onRequest', async (req, rep) => { if (!['GET', 'HEAD', 'OPTIONS'].i
 app.decorate('auth', async (req, rep) => {
   try { await req.jwtVerify(); } catch { return rep.code(401).send({ error: 'não autenticado' }); }
   if (!req.user.role || !(await q('select 1 from users where id=$1 and active and (sessions_valid_after is null or sessions_valid_after < to_timestamp($2))', [req.user.sub, req.user.iat || 0])).length) return rep.code(401).send({ error: 'sessão inválida' });
+  touch(req.user.sub);
   if (req.user.mc && !['/api/me', '/api/me/password', '/api/logout'].includes(req.url.split('?')[0])) return rep.code(403).send({ error: 'Troque a senha para continuar', mustChange: true });
 });
 app.decorate('role', (...r) => async (req, rep) => { await app.auth(req, rep); if (rep.sent) return; if (!r.includes(req.user.role)) return rep.code(403).send({ error: 'sem permissão' }); });
@@ -36,7 +38,7 @@ app.setErrorHandler((e, req, rep) => {
   rep.code(c).send({ error: c < 500 || c === 503 ? e.message : 'erro interno' });
 });
 installBilling(app);
-for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin'])
+for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta'])
   await app.register((await import(`./routes/${m}.js`)).default);
 await app.register(stat, { root: new URL('../public/', import.meta.url).pathname, wildcard: false });
 app.setNotFoundHandler((req, rep) => req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/ws') ? rep.sendFile('index.html') : rep.code(404).send({ error: 'não encontrado' }));

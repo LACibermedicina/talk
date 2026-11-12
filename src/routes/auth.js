@@ -2,7 +2,7 @@ import { z } from 'zod';
 import argon2 from 'argon2';
 import { q } from '../db.js';
 import { audit } from '../audit.js';
-import { STATUSES, setStatus } from '../presence.js';
+import { STATUSES, setStatus, forget } from '../presence.js';
 export default async function (app) {
   app.post('/api/login', { config: { rateLimit: { max: 8, timeWindow: '1 minute' } } }, async (req, rep) => {
     const b = z.object({ login: z.string().trim().min(1).max(200).optional(), email: z.string().max(200).optional(), password: z.string().min(1).max(200) }).parse(req.body), id = (b.login || b.email || '').trim().toLowerCase();
@@ -18,8 +18,8 @@ export default async function (app) {
     rep.setCookie('t', app.jwt.sign({ sub: u.id, role: u.role, name: u.name, mc: u.must_change }, { expiresIn: '8h' }), { httpOnly: true, secure: process.env.COOKIE_SECURE !== 'false', sameSite: 'strict', path: '/', maxAge: 28800 });
     return { id: u.id, name: u.name, role: u.role, lang: u.lang };
   });
-  app.post('/api/logout', { preHandler: app.auth }, async (req, rep) => { await audit(req, 'logout', 'user', req.user.sub); rep.clearCookie('t', { path: '/' }); return { ok: true }; });
-  app.get('/api/me', { preHandler: app.auth }, async req => (await q('select id,name,username,role,cargo,lang,ai_consent,ask_reason,must_change,is_root,presence,country from users where id=$1', [req.user.sub]))[0]);
+  app.post('/api/logout', { preHandler: app.auth }, async (req, rep) => { forget(req.user.sub); await audit(req, 'logout', 'user', req.user.sub); rep.clearCookie('t', { path: '/' }); return { ok: true }; });
+  app.get('/api/me', { preHandler: app.auth }, async req => (await q('select id,name,username,role,cargo,lang,ai_consent,ask_reason,must_change,is_root,presence,country,decline_msg from users where id=$1', [req.user.sub]))[0]);
   app.post('/api/me/password', { preHandler: app.auth, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (req, rep) => {
     const b = z.object({ current: z.string().min(1).max(200), next: z.string().min(12, 'A nova senha precisa ter ao menos 12 caracteres').max(200) }).parse(req.body), [u] = await q('select * from users where id=$1', [req.user.sub]);
     if (!(await argon2.verify(u.pw_hash, b.current))) return rep.code(400).send({ error: 'Senha atual incorreta' });

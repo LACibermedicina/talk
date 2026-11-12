@@ -42,7 +42,7 @@ export default async function (app) {
     return { translated: await translate(dec(m.body_enc), to) };
   });
   app.get('/ws', { websocket: true, preHandler: app.auth }, (sock, req) => {
-    if (req.headers.origin !== process.env.APP_ORIGIN) return sock.close();
+    { const o = req.headers.origin, h = req.headers['x-forwarded-host'] || req.headers.host; let same = false; try { same = !!o && new URL(o).host === h; } catch { /* origem inválida */ } if (o !== process.env.APP_ORIGIN && !same) return sock.close(); }
     const mine = new Set(); track(req.user.sub, sock); connect(req.user.sub); loadStatus(req.user.sub);
     sock.on('message', async raw => { try { const m = JSON.parse(raw); if (m.join && room.safeParse(m.join).success && await allowed(req.user, m.join)) { if (!rooms.has(m.join)) rooms.set(m.join, new Set()); rooms.get(m.join).add(sock); mine.add(m.join); } } catch {} });
     sock.on('close', () => { disconnect(req.user.sub); mine.forEach(k => rooms.get(k)?.delete(sock)); });

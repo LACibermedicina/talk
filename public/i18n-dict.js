@@ -2857,6 +2857,16 @@ window.I18N_DICT = {
 "Usuário inativado": ["Usuario inactivado", "", "User deactivated", "用户已停用"],
 "Usuário reativado": ["Usuario reactivado", "", "User reactivated", "用户已重新启用"],
 "Conta inativada. Procure o administrador da clínica.": ["Cuenta inactivada. Contacte al administrador de la clínica.", "", "Account deactivated. Contact the clinic administrator.", "账户已停用，请联系诊所管理员。"],
+"Teleconsulta": ["Teleconsulta", "", "Teleconsultation", "远程会诊"],
+"Solicitar teleconsulta": ["Solicitar teleconsulta", "", "Request teleconsultation", "申请远程会诊"],
+"Médicos disponíveis agora": ["Médicos disponibles ahora", "", "Doctors available now", "当前可用的医生"],
+"Pacientes disponíveis agora": ["Pacientes disponibles ahora", "", "Patients available now", "当前可用的患者"],
+"Teleconsulta solicitada": ["Teleconsulta solicitada", "", "Teleconsultation requested", "远程会诊请求"],
+"Atender": ["Atender", "", "Answer", "接听"],
+"Chamada recusada": ["Llamada rechazada", "", "Call declined", "通话被拒绝"],
+"Sem resposta": ["Sin respuesta", "", "No answer", "无人应答"],
+"Mensagem padrão de recusa": ["Mensaje predeterminado de rechazo", "", "Default decline message", "默认拒绝消息"],
+"Salvar mensagem": ["Guardar mensaje", "", "Save message", "保存消息"],
 "Nenhuma movimentação ainda.": ["Aún no hay movimientos.", "", "No transactions yet.", "暂无交易。"],
 "Quanto custa cada recurso": ["Cuánto cuesta cada recurso", "", "What each feature costs", "各功能费用"]
 };

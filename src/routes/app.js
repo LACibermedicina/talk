@@ -19,7 +19,7 @@ export default async function (app) {
   app.get('/api/agenda/week', { preHandler: app.auth }, async req => {
     const { from, to } = z.object({ from: z.string().datetime(), to: z.string().datetime() }).parse(req.query), u = req.user, p = [from, to];
     const f = u.role === 'paciente' ? (p.push(u.sub), ' and a.patient_id=$3') : PRO.includes(u.role) ? (p.push(u.sub), ' and a.professional_id=$3') : '';
-    const rows = await q(`select a.id,a.patient_id,a.professional_id,a.starts_at,a.ends_at,a.status,a.noshow_risk,a.package_id,a.note_enc,pa.name patient,pr.name professional from appointments a join users pa on pa.id=a.patient_id join users pr on pr.id=a.professional_id where a.starts_at>=$1 and a.starts_at<$2${f} order by a.starts_at`, p);
+    const rows = await q(`select a.id,a.patient_id,a.professional_id,a.starts_at,a.ends_at,a.status,a.noshow_risk,a.package_id,a.note_enc,a.call_info,pa.name patient,pr.name professional from appointments a join users pa on pa.id=a.patient_id join users pr on pr.id=a.professional_id where a.starts_at>=$1 and a.starts_at<$2${f} order by a.starts_at`, p);
     const notes = u.role === 'paciente' ? [] : await q('select id,title,body_enc,starts_at from agenda_notes where owner_id=$1 and starts_at>=$2 and starts_at<$3 order by starts_at', [u.sub, from, to]);
     await audit(req, 'read', 'agenda');
     return { appointments: rows.map(({ note_enc, ...r }) => ({ ...r, note: u.role === 'paciente' || !note_enc ? '' : dec(note_enc) })), notes: notes.map(({ body_enc, ...n }) => ({ ...n, body: dec(body_enc) })) };
