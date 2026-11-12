@@ -15,8 +15,11 @@ if ! curl -skI --max-time 8 --resolve "$SUBDOMINIO:443:127.0.0.1" "https://$SUBD
   else echo "! certbot não instalado: apt install -y certbot python3-certbot-nginx"; fi
 else echo "✔ HTTPS já responde para $SUBDOMINIO"; fi
 
-FILES=$(grep -rlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u)
-[ -n "$FILES" ] || { echo "✘ Não achei o site $SUBDOMINIO em $NGINX_DIR. Mande: ls $NGINX_DIR/sites-enabled"; exit 1; }
+FILES=$(grep -RlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u)
+# fallback: pergunta ao próprio nginx quais arquivos definem o site
+[ -n "$FILES" ] || FILES=$(nginx -T 2>/dev/null | awk -v d="$SUBDOMINIO" '/^# configuration file /{f=$4; sub(":$","",f)} /server_name/ && index($0,d){print f}' | sort -u)
+FILES=$(for x in $FILES; do readlink -f "$x"; done | sort -u)
+[ -n "$FILES" ] || { echo "✘ Não achei o site $SUBDOMINIO em $NGINX_DIR. Mande: ls -la $NGINX_DIR/sites-enabled; nginx -T | grep -n server_name"; exit 1; }
 mudou=0
 for f in $FILES; do
   cp -p "$f" "$BKP/$(basename "$f").$(date +%s).bak"

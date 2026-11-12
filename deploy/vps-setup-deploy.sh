@@ -40,7 +40,7 @@ echo "== atualizando código e app (porta $PORTA, $SUBDOMINIO)"
 instalar_atualizar -repertorio_git "$REPO" -porta "$PORTA" -subdominio "$SUBDOMINIO" || { echo "instalar_atualizar falhou"; exit 1; }
 # aponta o proxy reverso do subdomínio para a porta atual (só altera arquivos que contêm o subdomínio)
 mudou=0
-for f in $(grep -rlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/sites-available" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u); do
+for f in $(grep -RlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/sites-available" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u); do
   if grep -Eq "proxy_pass\s+http://(127\.0\.0\.1|localhost):[0-9]+" "$f" && ! grep -Eq "proxy_pass\s+http://(127\.0\.0\.1|localhost):${PORTA}\b" "$f"; then
     mkdir -p /root/backup-nginx; cp -p "$f" "/root/backup-nginx/$(basename "$f").$(date +%s).bak"
     sed -Ei "s#(proxy_pass\s+http://(127\.0\.0\.1|localhost)):[0-9]+#\1:${PORTA}#" "$f"; mudou=1; echo "proxy de $f -> $PORTA"
