@@ -2230,6 +2230,8 @@ window.I18N_DICT = {
 "Nenhum usuário online agora": ["Ningún usuario en línea ahora", "", "No users online now", "当前没有在线用户"],
 "Nenhum usuário online neste bloco.": ["Ningún usuario en línea en este bloque.", "", "No users online in this block.", "此分组中没有在线用户。"],
 "Filtro de presença": ["Filtro de presencia", "", "Presence filter", "在线状态筛选"],
+"Voltar ao início": ["Volver al inicio", "", "Back to home", "返回首页"],
+"Você está em": ["Estás en", "", "You are in", "您当前位置"],
 "Só online": ["Solo en línea", "", "Online only", "仅在线"],
 "Paciente ·": ["Paciente ·", "", "Patient ·", "患者 ·"],
 "online": ["en línea", "", "online", "在线"],

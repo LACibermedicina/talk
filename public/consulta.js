@@ -91,6 +91,7 @@
   };
   function winEl(id) { return document.querySelector(`.cw2[data-w="${id}"]`); }
   function renderWin(id, full) {
+    if (id === 'lib' && S.view === 'biblioteca') { render(); return; } // celular: a biblioteca é uma tela, não um quadro
     const w = K.wins[id], d = WD[id]; let el = winEl(id); if (!w || w.st === 'closed') { if (el) el.remove(); return; }
     if (w.st === 'open' || w.st === 'max' || w.st === 'fold') w.lm = w.st;
     if (!el) { el = document.createElement('article'); el.className = 'cw2'; el.dataset.w = id; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', d.t); layer().append(el); full = true; }
@@ -164,7 +165,10 @@
   A.kprm = async i => { K.prefs = K.prefs.filter((_, k) => k !== +i); try { await savePrefs(); } catch (e) { toast(e.message); } };
   A.libopen = () => { K.tab.lib = K.tab.lib || 'mat'; openWin('lib'); };
   A.kpro = p => { const [id, modo] = String(p).split('|'); if (modo === 'agendar') { A.view('agenda'); toast('Abra a agenda e marque com este profissional'); } else if (typeof openPeer === 'function') { K.mode = 'mini'; applyCall(); openPeer(id).then(() => render()).catch(() => {}); } };
-  const _view = A.view; A.view = (v, ...r) => v === 'biblioteca' ? A.libopen() : _view(v, ...r);
+  /* celular (até 820 px): a biblioteca abre como tela cheia (com breadcrumb), sem quadro flutuante */
+  A.libview = () => { K.tab.lib = K.tab.lib || 'mat'; closeAll(); S.view = 'biblioteca'; S.lo = 0; render(); loadLib(); };
+  CENTER.biblioteca = () => bar('Biblioteca e preferências') + `<div class="cv cvlib">${BODY.lib()}</div>`;
+  const _view = A.view; A.view = (v, ...r) => v === 'biblioteca' ? (innerWidth <= 820 ? A.libview() : A.libopen()) : _view(v, ...r);
   /* ---------- paciente: consentimento ---------- */
   async function patientPoll() {
     if (!K.on || !K.aid || isPro()) return;

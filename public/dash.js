@@ -66,7 +66,8 @@ Object.assign(DASH, {
 // paciente: as funções dele (agenda e configurações) também são painéis, sem os quadros de gestão
 const DP = { agenda: { title: 'Agenda', icon: ICO.agenda, panels: [{ id: 'ag', t: 'Minha agenda', c: '#2a9d8f', i: ICO.agenda, f: [0, 0, .78, .88], h: () => inner('agenda') }] }, cfg: DASH.cfg };
 const DD = v => (S.me && S.me.role === 'paciente' ? DP[v] : DASH[v]);
-const isDash = () => !!(S.me && DD(S.view));
+const mob = () => innerWidth <= 820;
+const isDash = () => !!(S.me && DD(S.view)) && !mob(); // no celular não há quadros: a funcionalidade abre direto, em tela cheia
 const dwKey = v => 'm3d_dw_' + S.me.id + '_' + v;
 const dwGet = v => { S.dws = S.dws || {}; if (!S.dws[v]) { try { S.dws[v] = JSON.parse(localStorage.getItem(dwKey(v))) || {}; } catch { S.dws[v] = {}; } } return S.dws[v]; };
 const dwSave = v => { try { localStorage.setItem(dwKey(v), JSON.stringify(S.dws[v])); } catch { /* sem armazenamento */ } };
@@ -218,7 +219,7 @@ document.addEventListener('click', e => { if (S.dwm && !e.target.closest('.dmenu
 // ===== Menu lateral: oculta ao clicar fora (exceto com o chat aberto) e botão fechar janela =====
 function fixGrid() {
   const a = $('#app'); if (!a || !S.me) return; const d = isDash(), w = innerWidth, hide = !!S.lh && w > 820;
-  a.classList.toggle('dashv', d); a.classList.toggle('lh', hide); if (!hide) a.classList.remove('peek'); if (d || isHome()) a.classList.add('np');
+  a.classList.toggle('dashv', d); a.classList.toggle('lh', hide); if (!hide) a.classList.remove('peek'); if (d || isHome() || (mob() && HOME_APPS.some(x => x[0] === S.view))) a.classList.add('np');
   let tab = $('#ltab'); if (hide) { if (!tab) { tab = document.createElement('button'); tab.id = 'ltab'; tab.type = 'button'; tab.setAttribute('data-a', 'menu'); tab.setAttribute('aria-label', 'Fixar menu de contatos'); tab.innerHTML = '<img src="/logo.png" alt=""><span translate="no">Talk.M3D</span><span class="ltip" role="tooltip">' + ES('Fixar menu de contatos') + '</span>'; a.append(tab); } } else if (tab) tab.remove();
   decorateTop(); homeLayout();
   a.style.gridTemplateColumns = w > 820 ? `64px ${hide ? '0px' : (w > 1180 ? '290px' : '270px')} minmax(0,1fr)${w > 1180 && !a.classList.contains('np') ? ' 400px' : ''}` : '';
@@ -362,3 +363,17 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && (S.ntp || 
 
 // clicar na logo/nome do menu leva ao desktop
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.list .brand'); if (b && S.me && !e.target.closest('button, select, a, .lgw, .langrow')) A.gohome(); });
+
+/* Celular: a funcionalidade aberta pelo desktop mostra "Início" no topo e, logo abaixo, o nome dela como breadcrumb discreto, na cor do ícone. */
+window.M3D_CRUMB = h => {
+  if (!mob() || !S.me) return h;
+  const app = HOME_APPS.find(a => a[0] === S.view); if (!app) return h;
+  const [, t, i, c] = app;
+  const head = `<div class="mhd"><h2 class="mh"><button class="mhome" data-a="gohome" aria-label="${ES('Voltar ao início')}">${ES('Início')}</button></h2><nav class="crumb" style="--pc:${c}" aria-label="${ES('Você está em')}"><span class="cs" aria-hidden="true">›</span><span class="ci">${ic(i, 13)}</span><span class="cn">${ES(t)}</span></nav></div>`;
+  return h.replace(/^<div class="tb">([\s\S]*?)<\/div>/, (m, inner) => {
+    let x = inner.replace(/<button data-a="np">[\s\S]*?<\/button>/, '');
+    x = /<h2[^>]*>[\s\S]*?<\/h2>/.test(x) ? x.replace(/<h2[^>]*>[\s\S]*?<\/h2>/, head) : x.replace(/(<button class="menu"[^>]*>[\s\S]*?<\/button>)/, '$1' + head);
+    return '<div class="tb mtb">' + x + '</div>';
+  });
+};
+{ let wasMob = mob(); addEventListener('resize', () => { const m = mob(); if (m !== wasMob) { wasMob = m; if (S.me) render(); } }); }
