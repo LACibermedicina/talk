@@ -491,3 +491,5 @@ body:has(.app .rail) #langbar{display:none}
 
 /* Agenda no celular: controles de semana quebram para a linha de baixo */
 @media(max-width:820px){.tb.mtb{flex-wrap:wrap;row-gap:4px}.tb.mtb .mhd{flex:1 1 auto}}
+
+.inat{color:#d9363e}

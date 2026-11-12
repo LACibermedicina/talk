@@ -1,4 +1,4 @@
-import { connect, disconnect, loadStatus } from '../presence.js';
+import { connect, disconnect, loadStatus, track } from '../presence.js';
 import { z } from 'zod';
 import { q } from '../db.js';
 import { enc, dec } from '../crypto.js';
@@ -43,7 +43,7 @@ export default async function (app) {
   });
   app.get('/ws', { websocket: true, preHandler: app.auth }, (sock, req) => {
     if (req.headers.origin !== process.env.APP_ORIGIN) return sock.close();
-    const mine = new Set(); connect(req.user.sub); loadStatus(req.user.sub);
+    const mine = new Set(); track(req.user.sub, sock); connect(req.user.sub); loadStatus(req.user.sub);
     sock.on('message', async raw => { try { const m = JSON.parse(raw); if (m.join && room.safeParse(m.join).success && await allowed(req.user, m.join)) { if (!rooms.has(m.join)) rooms.set(m.join, new Set()); rooms.get(m.join).add(sock); mine.add(m.join); } } catch {} });
     sock.on('close', () => { disconnect(req.user.sub); mine.forEach(k => rooms.get(k)?.delete(sock)); });
   });

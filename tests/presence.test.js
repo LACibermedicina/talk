@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { connect, disconnect, isOnline, withOnline } from '../src/presence.js';
+import { connect, disconnect, isOnline, withOnline, track, kick } from '../src/presence.js';
 test('presença: online enquanto houver conexão aberta e offline ao fechar a última', () => {
   connect('u1'); connect('u1'); assert.ok(isOnline('u1'));
   disconnect('u1'); assert.ok(isOnline('u1'), 'ainda há uma aba aberta');
@@ -18,4 +18,14 @@ test('estado escolhido: ocupado aparece ocupado; offline (invisível) esconde qu
   setStatus('s1', 'offline'); assert.equal(statusOf('s1'), 'offline'); assert.equal(withOnline([{ id: 's1' }])[0].online, false);
   setStatus('s1', 'xx'); assert.equal(statusOf('s1'), 'offline', 'valor inválido é ignorado');
   disconnect('s1'); setStatus('s1', 'busy'); assert.equal(statusOf('s1'), 'offline', 'desconectado sempre offline');
+});
+test('inativar derruba as conexões abertas do usuário', () => {
+  const mk = () => { const h = {}; return { on: (e, f) => { h[e] = f; }, close() { this.closed = true; h.close?.(); }, closed: false }; };
+  const a = mk(), b = mk(), o = mk(); track('x', a); track('x', b); track('y', o);
+  kick('x'); assert.ok(a.closed && b.closed && !o.closed);
+});
+test('inativação: só admin/root, motivo registrado e login recusado (contrato do código)', async () => {
+  const { readFileSync } = await import('node:fs'), adm = readFileSync(new URL('../src/routes/admin.js', import.meta.url), 'utf8'), au = readFileSync(new URL('../src/routes/auth.js', import.meta.url), 'utf8');
+  assert.match(adm, /Somente o root inativa/); assert.match(adm, /sessions_valid_after=now\(\)/); assert.match(adm, /kick\(id\)/);
+  assert.match(au, /Conta inativada/);
 });

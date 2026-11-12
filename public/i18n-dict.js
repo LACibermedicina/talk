@@ -2851,6 +2851,12 @@ window.I18N_DICT = {
 "Novo token promocional": ["Nuevo token promocional", "", "New promo token", "新促销令牌"],
 "Confirmar pagamento": ["Confirmar pago", "", "Confirm payment", "确认付款"],
 "Desbloquear": ["Desbloquear", "", "Unblock", "解除封锁"],
+"Inativar": ["Inactivar", "", "Deactivate", "停用"],
+"Reativar": ["Reactivar", "", "Reactivate", "重新启用"],
+"Inativo": ["Inactivo", "", "Inactive", "已停用"],
+"Usuário inativado": ["Usuario inactivado", "", "User deactivated", "用户已停用"],
+"Usuário reativado": ["Usuario reactivado", "", "User reactivated", "用户已重新启用"],
+"Conta inativada. Procure o administrador da clínica.": ["Cuenta inactivada. Contacte al administrador de la clínica.", "", "Account deactivated. Contact the clinic administrator.", "账户已停用，请联系诊所管理员。"],
 "Nenhuma movimentação ainda.": ["Aún no hay movimientos.", "", "No transactions yet.", "暂无交易。"],
 "Quanto custa cada recurso": ["Cuánto cuesta cada recurso", "", "What each feature costs", "各功能费用"]
 };

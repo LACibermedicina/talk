@@ -6,9 +6,10 @@ import { audit, verifyChain } from '../audit.js';
 import { aiHealth } from '../services/ai.js';
 import { ALL, ADMIN_STAFF } from '../roles.js';
 import { USERNAME } from '../policy.js';
+import { kick } from '../presence.js';
 export default async function (app) {
   const A = { preHandler: app.role('admin') }, U = { preHandler: app.role('admin', ...ADMIN_STAFF) }, uuid = z.string().uuid();
-  app.get('/api/users', U, req => q(`select id,name,username,pending,email,role,cargo,active,is_root,must_change,last_login_at,failed_logins,(locked_until>now()) bloqueada,pw_changed_at,reg_conselho,reg_numero,reg_uf,icp_ref,(sign_img is not null) tem_assinatura from users ${req.user.role === 'admin' ? '' : "where role<>'admin'"} order by role,name`));
+  app.get('/api/users', U, req => q(`select id,name,username,pending,email,role,cargo,active,inactive_at,inactive_reason,(select name from users i where i.id=users.inactive_by) inactive_by_name,is_root,must_change,last_login_at,failed_logins,(locked_until>now()) bloqueada,pw_changed_at,reg_conselho,reg_numero,reg_uf,icp_ref,(sign_img is not null) tem_assinatura from users ${req.user.role === 'admin' ? '' : "where role<>'admin'"} order by role,name`));
   // Administrador cria qualquer tipo (administrador só o root); recepção/funcionário administrativo cria apenas pacientes.
   app.post('/api/users', U, async (req, rep) => {
     const b = z.object({ name: z.string().min(2).max(120), email: z.string().email(), phone: z.string().max(20).optional(), role: z.enum(ALL), cargo: z.string().max(60).optional(), username: z.string().regex(USERNAME, 'Usuário: letras minúsculas, números, ponto, hífen ou sublinhado (3 a 30)').optional(), password: z.string().min(12).max(200).optional(), lang: z.string().max(5).default('pt') }).parse(req.body);
@@ -20,10 +21,18 @@ export default async function (app) {
   });
   app.patch('/api/users/:id/approve', U, async (req, rep) => { const id = uuid.parse(req.params.id), r = await q('update users set active=true,pending=false where id=$1 and pending returning id', [id]); if (!r.length) return rep.code(404).send({ error: 'Cadastro pendente não encontrado' }); await audit(req, 'aprovar_cadastro', 'user', id); return { ok: true }; });
   app.delete('/api/users/:id/pending', U, async (req, rep) => { const id = uuid.parse(req.params.id), r = await q('delete from users where id=$1 and pending returning id', [id]); if (!r.length) return rep.code(404).send({ error: 'Cadastro pendente não encontrado' }); await audit(req, 'recusar_cadastro', 'user', id); return { ok: true }; });
+  // Inativar/reativar: administrador e root. Só o root mexe em administradores; root e a própria conta são intocáveis.
+  // Inativado = não entra mais (login recusado), sessões abertas caem na hora e conexões em tempo real são encerradas.
   app.patch('/api/users/:id/active', A, async (req, rep) => {
-    const { id } = z.object({ id: uuid }).parse(req.params), { active } = z.object({ active: z.boolean() }).parse(req.body), [t] = await q('select is_root from users where id=$1', [id]);
-    if (!t) return rep.code(404).send({ error: 'não encontrado' }); if (t.is_root || id === req.user.sub) return rep.code(403).send({ error: 'O usuário root e a própria conta não podem ser bloqueados' });
-    await q('update users set active=$2 where id=$1', [id, active]); await audit(req, active ? 'reativar' : 'bloquear', 'user', id); return { ok: true };
+    const { id } = z.object({ id: uuid }).parse(req.params), { active, reason } = z.object({ active: z.boolean(), reason: z.string().trim().max(300).optional() }).parse(req.body);
+    const [t] = await q('select is_root,role,pending from users where id=$1', [id]), [me] = await q('select is_root from users where id=$1', [req.user.sub]);
+    if (!t) return rep.code(404).send({ error: 'não encontrado' });
+    if (t.is_root || id === req.user.sub) return rep.code(403).send({ error: 'O usuário root e a própria conta não podem ser inativados' });
+    if (t.role === 'admin' && !me?.is_root) return rep.code(403).send({ error: 'Somente o root inativa ou reativa administradores' });
+    if (t.pending) return rep.code(409).send({ error: 'Cadastro pendente: aprove ou recuse' });
+    if (active) await q('update users set active=true,inactive_at=null,inactive_by=null,inactive_reason=null,failed_logins=0,locked_until=null where id=$1', [id]);
+    else { await q('update users set active=false,inactive_at=now(),inactive_by=$2,inactive_reason=$3,sessions_valid_after=now() where id=$1', [id, req.user.sub, reason || null]); kick(id); }
+    await audit(req, active ? 'reativar' : 'inativar', 'user', id, reason ? { motivo: reason } : undefined); return { ok: true };
   });
   // Registro profissional (CRM etc.) e imagem de assinatura. A validação do número no conselho (ex.: CFM) é externa e não é feita aqui.
   // Credenciais: redefinição por administrador (senha temporária + troca obrigatória, sessões antigas deixam de valer), desbloqueio e histórico.

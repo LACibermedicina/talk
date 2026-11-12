@@ -9,3 +9,8 @@ export const setStatus = (id, s) => { if (STATUSES.includes(s)) st.set(id, s); }
 export const statusOf = id => (!on.has(id) || st.get(id) === 'offline') ? 'offline' : st.get(id) || 'online';
 export const withOnline = rows => rows.map(r => { const status = statusOf(r.id); return { ...r, online: status !== 'offline', status }; });
 export async function loadStatus(id) { if (st.has(id)) return; try { const { q } = await import('./db.js'), [u] = await q('select presence from users where id=$1', [id]); st.set(id, u ? u.presence : 'online'); } catch { /* sem banco */ } }
+
+// Conexões abertas por usuário: permitem derrubar na hora quem foi inativado.
+const socks = new Map();
+export function track(id, sock) { if (!socks.has(id)) socks.set(id, new Set()); socks.get(id).add(sock); sock.on('close', () => { const s = socks.get(id); if (s) { s.delete(sock); if (!s.size) socks.delete(id); } }); }
+export function kick(id) { for (const s of [...(socks.get(id) || [])]) { try { s.close(1008, 'conta inativada'); } catch { /* já fechado */ } } socks.delete(id); }

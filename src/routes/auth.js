@@ -11,7 +11,7 @@ export default async function (app) {
     if (!u) { await argon2.hash(b.password); return bad('desconhecido'); }
     if (u.locked_until && new Date(u.locked_until) > new Date()) { await audit(req, 'login_bloqueado', 'user', u.id); return rep.code(429).send({ error: 'Muitas tentativas erradas. Tente de novo em alguns minutos.' }); }
     if (!(await argon2.verify(u.pw_hash, b.password))) return bad('senha');
-    if (!u.active) { if (u.pending) return rep.code(403).send({ error: 'Seu cadastro ainda aguarda aprovação da clínica.' }); return bad('inativo'); }
+    if (!u.active) { if (u.pending) return rep.code(403).send({ error: 'Seu cadastro ainda aguarda aprovação da clínica.' }); await audit(req, 'login_inativo', 'user', u.id); return rep.code(403).send({ error: 'Conta inativada. Procure o administrador da clínica.', inactive: true }); }
     await q('update users set failed_logins=0,locked_until=null where id=$1', [u.id]); req.user = { sub: u.id };
     await q('update users set last_login_at=now(),last_login_ip=$2 where id=$1', [u.id, req.ip]); await q("insert into credential_events(user_id,kind,ip) values($1,'login',$2)", [u.id, req.ip]);
     await audit(req, 'login', 'user', u.id);
