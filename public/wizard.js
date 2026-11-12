@@ -42,7 +42,10 @@
     ${learn('Por que um assistente?', 'Um sistema de saúde lida com dados sensíveis. Aqui cada credencial é testada e gravada <b>cifrada</b> no seu servidor, e nenhum usuário nasce com senha padrão.')}<div class="act"><button class="wbtn pri" data-w="next">Começar</button></div>`;
   S[1] = () => `<h1 id="wzh" tabindex="-1">Prove que você é o dono do servidor</h1><div class="lockw ${W.code ? 'open' : ''}" aria-hidden="true"><svg viewBox="0 0 64 64" width="84"><path class="shk" d="M20 28v-8a12 12 0 0124 0v8" fill="none" stroke="#9fe3d3" stroke-width="5" stroke-linecap="round"/><rect x="14" y="28" width="36" height="28" rx="6" fill="#4bab9d"/><circle cx="32" cy="42" r="4" fill="#0e1621"/></svg></div>
     ${learn('O que é o código de instalação?', 'Quando o sistema inicia sem usuários, ele imprime um código no log do servidor. Só quem tem acesso ao servidor consegue lê-lo, então ninguém mais pode “tomar” a instalação.')}
-    <p>No terminal do servidor, rode:</p><div class="cmd"><code>docker compose logs app | grep INSTALAÇÃO</code><button class="wbtn sm" data-w="copy" data-p="docker compose logs app | grep INSTALAÇÃO">Copiar</button></div>
+    <p>No terminal do servidor, rode o comando do seu tipo de instalação:</p>
+    <p class="mut" style="margin:6px 0 2px">PM2 (sem Docker):</p><div class="cmd"><code>pm2 logs talk --lines 200 --nostream | grep -i INSTALAÇÃO</code><button class="wbtn sm" data-w="copy" data-p="pm2 logs talk --lines 200 --nostream | grep -i INSTALAÇÃO">Copiar</button></div>
+    <p class="mut" style="margin:6px 0 2px">Docker:</p><div class="cmd"><code>docker compose logs app | grep INSTALAÇÃO</code><button class="wbtn sm" data-w="copy" data-p="docker compose logs app | grep INSTALAÇÃO">Copiar</button></div>
+    <p class="mut" style="margin:6px 0 2px">Qualquer instalação (lê do arquivo, ajuste a pasta se preciso):</p><div class="cmd"><code>grep SETUP_CODE data/config.env</code><button class="wbtn sm" data-w="copy" data-p="grep SETUP_CODE data/config.env">Copiar</button></div>
     <div class="fl"><label for="wcode">Código de instalação</label><input id="wcode" data-w-in="code" value="${E(W.codeIn || '')}" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="14" style="letter-spacing:.2em;text-transform:uppercase"></div><div class="err" role="alert">${ES(W.err)}</div>
     <div class="act"><button class="wbtn" data-w="back">Voltar</button><button class="wbtn pri" data-w="unlock">Verificar código</button></div>`;
   S[2] = () => {
@@ -122,7 +125,7 @@
     try {
       await bapi('/save', { DATABASE_URL: B.url, JWT_SECRET: B.keys.JWT_SECRET, DATA_KEY: B.keys.DATA_KEY, APP_ORIGIN: B.origin.trim(), TZ: B.tz.trim(), PGSSL: B.ssl ? 'true' : 'false', ack: B.ack });
       for (let i = 0; i < 60; i++) { await new Promise(r => setTimeout(r, 1000)); try { const st = await fetch('/api/setup/status').then(r => r.json()); if (st && !st.boot) { W.boot = false; if (st.weakAllowed !== undefined) W.weak = !!st.weakAllowed; B.saving = false; B.url = ''; B.keys = null; return go(2); } } catch { /* reiniciando */ } }
-      throw new Error('O sistema demorou para iniciar. Veja o log: docker compose logs app');
+      throw new Error('O sistema demorou para iniciar. Veja o log: pm2 logs talk (PM2) ou docker compose logs app (Docker)');
     } catch (e) { B.saving = false; W.err = e.message; render(); }
   }
   /* ---------- renderização ---------- */
