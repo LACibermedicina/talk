@@ -4,7 +4,9 @@ import Fastify from 'fastify';
 import stat from '@fastify/static';
 import pg from 'pg';
 import { timingSafeEqual } from 'node:crypto';
-import { saveConfig, genKeys, validKey, validDbUrl, originOf, newCode } from './config.js';
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { saveConfig, genKeys, validKey, validDbUrl, originOf, newCode, dataDir } from './config.js';
 import { bootChecks } from './checks.js';
 const same = (a, b) => typeof a === 'string' && b && a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 /** Testa a conexão e as permissões do banco, devolvendo uma mensagem em linguagem simples. */
@@ -22,12 +24,15 @@ export async function testDb(url, { ssl = true } = {}) {
   } finally { await c.end().catch(() => {}); }
 }
 export async function runBoot(miss) {
-  const code = process.env.SETUP_CODE && /^[A-Z0-9-]{14}$/.test(process.env.SETUP_CODE) ? process.env.SETUP_CODE : newCode(); process.env.SETUP_CODE = code;
+  const codeFile = join(dataDir(), 'setup-code.txt'), okCode = c => typeof c === 'string' && /^[A-Z0-9-]{14}$/.test(c);
+  let saved0 = ''; try { saved0 = readFileSync(codeFile, 'utf8').trim(); } catch { /* ainda não existe */ }
+  const code = okCode(process.env.SETUP_CODE) ? process.env.SETUP_CODE : okCode(saved0) ? saved0 : newCode(); process.env.SETUP_CODE = code;
+  try { mkdirSync(dataDir(), { recursive: true }); writeFileSync(codeFile, code + '\n', { mode: 0o600 }); } catch { /* sem escrita: o log continua mostrando */ }
   const app = Fastify({ logger: { redact: ['req.headers.cookie'] }, trustProxy: true, bodyLimit: 1e5 });
   let fails = 0, until = 0; const rl = new Map();
   app.addHook('onRequest', async (req, rep) => { rep.header('x-content-type-options', 'nosniff').header('referrer-policy', 'no-referrer').header('cache-control', 'no-store').header('x-frame-options', 'DENY'); });
   const lim = (req, rep, max = 30) => { const k = req.ip, n = Date.now(), a = (rl.get(k) || []).filter(t => n - t < 60000); a.push(n); rl.set(k, a); if (a.length > max) { rep.code(429).send({ error: 'Muitas tentativas. Aguarde um minuto.' }); return true; } return false; };
-  const gate = async (req, rep) => { if (lim(req, rep)) return rep; if (!same(req.headers['x-setup-code'], code)) return rep.code(401).send({ error: 'Código de instalação incorreto. Ele aparece no log do servidor (PM2: pm2 logs talk | grep -i INSTALAÇÃO; Docker: docker compose logs app | grep INSTALAÇÃO) e no arquivo data/config.env (SETUP_CODE).' }); };
+  const gate = async (req, rep) => { if (lim(req, rep)) return rep; if (!same(req.headers['x-setup-code'], code)) return rep.code(401).send({ error: 'Código de instalação incorreto. Ele aparece no log do servidor (PM2: pm2 logs talk | grep -i INSTALAÇÃO; Docker: docker compose logs app | grep INSTALAÇÃO) e no arquivo data/setup-code.txt (cat data/setup-code.txt).' }); };
   app.get('/api/health', { config: { rateLimit: false } }, async () => ({ ok: true, boot: true }));
   app.get('/api/setup/status', async () => ({ needed: true, boot: true, missing: miss, weakAllowed: false }));
   app.post('/api/setup/unlock', async (req, rep) => { if (lim(req, rep, 10)) return rep; if (Date.now() < until) return rep.code(429).send({ error: 'Aguarde alguns segundos e tente de novo.' }); const c = String((req.body || {}).code || '').trim().toUpperCase(); if (!same(c, code)) { if (++fails >= 5) { fails = 0; until = Date.now() + 30000; } return rep.code(401).send({ error: 'Código incorreto. Veja o log do servidor.' }); } fails = 0; return { ok: true, boot: true }; });
@@ -48,7 +53,7 @@ export async function runBoot(miss) {
     const cfg = { DATABASE_URL: url, JWT_SECRET: b.JWT_SECRET, DATA_KEY: b.DATA_KEY, APP_ORIGIN: origin, TZ: tz };
     if (b.PGSSL === 'false') cfg.PGSSL = 'false'; if (origin.startsWith('http://')) cfg.COOKIE_SECURE = 'false';
     try { saveConfig(cfg); } catch (e) { return rep.code(500).send({ error: 'Não foi possível gravar a configuração em data/config.env (' + e.code + '). Verifique o volume "appdata" no docker-compose.yml.' }); }
-    Object.assign(process.env, cfg, { SETUP_CODE: code }); saved = true; setTimeout(() => resolveBoot(), 400);
+    Object.assign(process.env, cfg, { SETUP_CODE: code }); saved = true; try { rmSync(codeFile, { force: true }); } catch { /* ok */ } setTimeout(() => resolveBoot(), 400);
     return { ok: true, http: origin.startsWith('http://') };
   });
   await app.register(stat, { root: new URL('../../public/', import.meta.url).pathname, wildcard: false });

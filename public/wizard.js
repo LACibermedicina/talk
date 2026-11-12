@@ -45,7 +45,7 @@
     <p>No terminal do servidor, rode o comando do seu tipo de instalação:</p>
     <p class="mut" style="margin:6px 0 2px">PM2 (sem Docker):</p><div class="cmd"><code>pm2 logs talk --lines 200 --nostream | grep -i INSTALAÇÃO</code><button class="wbtn sm" data-w="copy" data-p="pm2 logs talk --lines 200 --nostream | grep -i INSTALAÇÃO">Copiar</button></div>
     <p class="mut" style="margin:6px 0 2px">Docker:</p><div class="cmd"><code>docker compose logs app | grep INSTALAÇÃO</code><button class="wbtn sm" data-w="copy" data-p="docker compose logs app | grep INSTALAÇÃO">Copiar</button></div>
-    <p class="mut" style="margin:6px 0 2px">Qualquer instalação (lê do arquivo, ajuste a pasta se preciso):</p><div class="cmd"><code>grep SETUP_CODE data/config.env</code><button class="wbtn sm" data-w="copy" data-p="grep SETUP_CODE data/config.env">Copiar</button></div>
+    <p class="mut" style="margin:6px 0 2px">Qualquer instalação (lê do arquivo, ajuste a pasta se preciso):</p><div class="cmd"><code>cat data/setup-code.txt</code><button class="wbtn sm" data-w="copy" data-p="cat data/setup-code.txt">Copiar</button></div>
     <div class="fl"><label for="wcode">Código de instalação</label><input id="wcode" data-w-in="code" value="${E(W.codeIn || '')}" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="14" style="letter-spacing:.2em;text-transform:uppercase"></div><div class="err" role="alert">${ES(W.err)}</div>
     <div class="act"><button class="wbtn" data-w="back">Voltar</button><button class="wbtn pri" data-w="unlock">Verificar código</button></div>`;
   S[2] = () => {
