@@ -12,8 +12,10 @@ const same = (a, b) => typeof a === 'string' && b && a.length === b.length && ti
 /** Testa a conexão e as permissões do banco, devolvendo uma mensagem em linguagem simples. */
 /** Sem TLS: remove sslmode/ssl da URL, pois o driver dá prioridade à URL sobre a opção ssl. */
 export const noSslUrl = u => u.replace(/([?&])(sslmode|ssl|sslrootcert)=[^&]*&?/gi, '$1').replace(/[?&]$/, '');
+/** Banco na própria máquina (loopback): o tráfego não sai do servidor, então TLS é dispensado automaticamente. */
+export const isLoop = u => /@(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i.test(u);
 export async function testDb(url, { ssl = true } = {}) {
-  if (!ssl) url = noSslUrl(url);
+  if (!ssl || isLoop(url)) { url = noSslUrl(url); ssl = false; }
   if (!validDbUrl(url)) return { ok: false, message: 'O endereço não parece uma connection string do PostgreSQL.', hint: 'Ela começa com postgresql:// e tem usuário, senha, servidor e nome do banco. No Neon: Dashboard → Connect → copie a "connection string".' };
   const c = new pg.Client({ connectionString: url, ssl: ssl ? { rejectUnauthorized: true } : false, connectionTimeoutMillis: 10000 });
   try {
@@ -52,9 +54,9 @@ export async function runBoot(miss) {
     if (!validKey(b.DATA_KEY)) return rep.code(400).send({ error: 'Chave de criptografia inválida. Gere as chaves na etapa anterior.' });
     if (b.ack !== true) return rep.code(400).send({ error: 'Confirme que guardou uma cópia da chave de criptografia.' });
     try { Intl.DateTimeFormat('pt-BR', { timeZone: tz }); } catch { return rep.code(400).send({ error: 'Fuso horário inválido.' }); }
-    const t = await testDb(url, { ssl: b.PGSSL !== 'false' }); if (!t.ok) return rep.code(400).send({ error: t.message + ' ' + (t.hint || '') });
+    const noTls = b.PGSSL === 'false' || isLoop(url); const t = await testDb(url, { ssl: !noTls }); if (!t.ok) return rep.code(400).send({ error: t.message + ' ' + (t.hint || '') });
     const cfg = { DATABASE_URL: url, JWT_SECRET: b.JWT_SECRET, DATA_KEY: b.DATA_KEY, APP_ORIGIN: origin, TZ: tz };
-    if (b.PGSSL === 'false') cfg.PGSSL = 'false'; if (origin.startsWith('http://')) cfg.COOKIE_SECURE = 'false';
+    if (noTls) cfg.PGSSL = 'false'; if (origin.startsWith('http://')) cfg.COOKIE_SECURE = 'false';
     try { saveConfig(cfg); } catch (e) { return rep.code(500).send({ error: 'Não foi possível gravar a configuração em data/config.env (' + e.code + '). Verifique o volume "appdata" no docker-compose.yml.' }); }
     Object.assign(process.env, cfg, { SETUP_CODE: code }); saved = true; try { rmSync(codeFile, { force: true }); } catch { /* ok */ } setTimeout(() => resolveBoot(), 400);
     return { ok: true, http: origin.startsWith('http://') };

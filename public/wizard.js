@@ -170,7 +170,7 @@
   document.addEventListener('input', e => {
     const t = e.target; if (!document.querySelector('.wz')) return;
     if (t.dataset.v) { W.vals[t.dataset.v] = t.value.trim(); Object.keys(SV).forEach(s => { if (SV[s].includes(t.dataset.v)) delete W.tests[s]; }); }
-    if (t.dataset.b) { W.B[t.dataset.b] = t.value; if (t.dataset.b === 'url') { W.B.dbt = null; const bt = document.querySelector('[data-w=dbtest]'); if (bt) bt.disabled = !t.value; const ch = bt && bt.parentNode.querySelector('.tchip'); if (ch) { ch.className = 'tchip'; ch.textContent = 'Ainda não testado'; } const nx = document.querySelector('.act [data-w=next]'); if (nx) nx.disabled = true; } }
+    if (t.dataset.b) { W.B[t.dataset.b] = t.value; if (t.dataset.b === 'url') { W.B.dbt = null; if (/@(127\.0\.0\.1|localhost)[:/]/i.test(t.value)) { W.B.ssl = false; const ck = document.querySelector('[data-b-chk=ssl]'); if (ck) ck.checked = false; } const bt = document.querySelector('[data-w=dbtest]'); if (bt) bt.disabled = !t.value; const ch = bt && bt.parentNode.querySelector('.tchip'); if (ch) { ch.className = 'tchip'; ch.textContent = 'Ainda não testado'; } const nx = document.querySelector('.act [data-w=next]'); if (nx) nx.disabled = true; } }
     if (t.dataset.wIn === 'code') W.codeIn = t.value; if (t.dataset.r) W.root[t.dataset.r] = t.value; if (t.dataset.t && t.dataset.t !== 'on') W.team[+t.dataset.i][t.dataset.t] = t.value;
   });
   document.addEventListener('change', e => {
