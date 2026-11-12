@@ -63,17 +63,29 @@ command -v pm2 >/dev/null && pm2 restart "$PM2_NOME" >/dev/null 2>&1 && echo "�
 if [ -n "${USER_SEGURO:-}" ]; then
   PORTA=$(. /etc/talk-deploy.conf 2>/dev/null; echo "${PORTA:-7012}")
   id talk >/dev/null 2>&1 || useradd -r -m -s /bin/bash talk
-  cat > /usr/local/bin/talk-as-user <<AS
+  # só mexe no app se o usuário "talk" enxerga node e pm2 (instalações em /root/.nvm, por exemplo, ele não enxerga)
+  if ! su - talk -c 'command -v node >/dev/null && command -v pm2 >/dev/null' 2>/dev/null; then
+    echo "! O usuário talk não enxerga node/pm2 deste servidor (provavelmente instalados dentro de /root)."
+    echo "  Nada foi alterado: o app continua rodando como antes. Rodar sem root exige node e pm2 instalados para todos (ex.: apt/nodesource + npm i -g pm2)."
+  else
+    cat > /usr/local/bin/talk-as-user <<AS
 #!/usr/bin/env bash
 # Põe o app para rodar como usuário "talk" (sem root). Chamado após cada atualização.
+su - talk -c 'command -v node >/dev/null && command -v pm2 >/dev/null' || { echo "talk sem node/pm2: mantendo como está"; exit 1; }
 pm2 delete $PM2_NOME >/dev/null 2>&1; pm2 save >/dev/null 2>&1
 chown -R talk:talk $APP_DIR
 git config --global --add safe.directory $APP_DIR >/dev/null 2>&1
 su - talk -c "cd $APP_DIR && (pm2 delete $PM2_NOME >/dev/null 2>&1; PORT=$PORTA TZ=\${TZ:-America/Sao_Paulo} pm2 start src/server.js --name $PM2_NOME && pm2 save)"
 AS
-  chmod 755 /usr/local/bin/talk-as-user
-  /usr/local/bin/talk-as-user && echo "✔ app rodando como usuário talk (sem root)"
-  env PATH="$PATH" pm2 startup systemd -u talk --hp /home/talk >/dev/null 2>&1 && echo "✔ inicia sozinho com o servidor (como talk)"
-  touch /etc/talk-as-user.on
+    chmod 755 /usr/local/bin/talk-as-user
+    if /usr/local/bin/talk-as-user; then
+      echo "✔ app rodando como usuário talk (sem root)"
+      touch /etc/talk-as-user.on
+      env PATH="$PATH" pm2 startup systemd -u talk --hp /home/talk >/dev/null 2>&1 && echo "✔ inicia sozinho com o servidor (como talk)"
+    else
+      echo "✘ falhou ao iniciar como talk; voltando ao modo anterior"; rm -f /etc/talk-as-user.on
+      chown -R root:root "$APP_DIR"; (cd "$APP_DIR" && PORT=$PORTA TZ=America/Sao_Paulo pm2 start src/server.js --name "$PM2_NOME" && pm2 save)
+    fi
+  fi
 fi
 echo; echo "Agora abra https://$SUBDOMINIO e clique em 'Verificar de novo'."
