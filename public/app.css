@@ -477,3 +477,7 @@ body:has(.app .rail) #langbar{display:none}
  .list.open~.lgtab{display:none}
 }
 @media(max-width:820px) and (prefers-reduced-motion:no-preference){.lgtab{animation:lgin .2s ease-out}}@keyframes lgin{from{opacity:0;transform:translate(-100%,-50%)}}
+
+/* filtro Só online (todos os blocos) */
+.onbtn{border-radius:999px;padding:3px 10px;border:1px solid var(--ln)}.onbtn.on{background:var(--ac2);border-color:var(--ac);font-weight:600}
+.bksec+.onbar{margin:2px 0 8px}
