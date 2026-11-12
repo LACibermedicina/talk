@@ -227,7 +227,9 @@ A.menu = () => { if (innerWidth > 820) S.lh = !S.lh; else S.lo = !S.lo; render()
 A.closev = () => { if (S.view === 'chat') { S.room = null; S.msgs = []; } else S.view = 'chat'; S.lh = false; S.dwm = false; if (innerWidth <= 820) S.lo = 1; render(); };
 // dois cliques fora do menu (na mesma tela) ocultam o menu; com o chat aberto ele só some quando o usuário minimiza
 let oc = 0, ocView = null;
+const autoHideOn = () => { try { return !!(S.me && lay().autohide); } catch { return false; } }; // menu fixo por padrão: só oculta sozinho se o usuário ligar a opção
 document.addEventListener('click', e => {
+  if (!autoHideOn()) { oc = 0; return; }
   if (S.me && innerWidth > 820 && !S.lh && S.view === 'chat' && S.room) { // conversa aberta: clicar na área da conversa oculta o menu (sem recarregar a tela, para não perder o texto digitado)
     const t = e.target; if (t.closest && t.closest('.chat') && !t.closest('button, a, input, textarea, select, label, summary, [data-a], [contenteditable]')) { S.lh = true; fixGrid(); }
     oc = 0; return;
@@ -302,10 +304,10 @@ function homeH() {
 function homeLayout() {
   const stk = document.getElementById('pstack'); if (stk) stk.innerHTML = PMIN.map(p => `<button class="pstk ${p.cls}" data-a="pitmin" data-p="${p.id}" title="${ES('Restaurar')}: ${ES(p.ttl)}" aria-label="${ES('Restaurar')}: ${ES(p.ttl)}"><i></i><span class="pki">${ic((PITINFO[p.id] || PITINFO.nb)[0], 19)}</span><span class="ptip" role="tooltip"><b>${ES(p.ttl)}</b><small>${ES((PITINFO[p.id] || PITINFO.nb)[1])}</small><small class="mu">${ES('Clique para restaurar')}</small></span></button>`).join('');
   if (stk) { let nts = []; try { nts = NB.get(); } catch { nts = []; } stk.insertAdjacentHTML('beforeend', nts.slice(0, 12).map(c => `<button class="pstk pnote" data-a="view" data-p="notas" aria-label="${ES('Anotação')}: ${E(c.name)}"><i></i><span class="pki">${ic(ICO.note, 18)}</span><span class="ptip" role="tooltip"><b>${E(c.name)}</b><small>${c.text ? E(String(c.text).slice(0, 80)) : ES('Anotação salva')}</small><small class="mu">${ES('Clique para abrir as anotações')}</small></span></button>`).join('')); }
-  const sns = document.getElementById('sns'); if (!sns) return; const PS = PIT.get(), W = sns.clientWidth || 800, gap = 20, colW = 250, cols = Math.max(1, Math.floor((W + gap) / (colW + gap))), colH = new Array(cols).fill(0); let maxB = 0;
+  const sns = document.getElementById('sns'); if (!sns) return; const PS = PIT.get(), W = sns.clientWidth || 800, gap = 20, colW = W >= 1000 ? 250 : Math.max(180, Math.floor((W - gap) / 2)); let maxB = 0, rx = 0, ry = 0, rh = 0;
   [...sns.querySelectorAll('.sn[data-pit]')].forEach(el => {
     const id = el.dataset.pit, s = PS[id] || {}, big = s.st === 'big', min = s.st === 'min', w = big ? Math.min(780, W - 8) : min ? 200 : colW; el.style.width = w + 'px'; el.style.zIndex = (S.pz && S.pz[id]) || (big ? 20 : 1);
-    let x, y; if (s.x != null && s.y != null) { x = s.x; y = s.y; } else { const c = colH.indexOf(Math.min(...colH)); x = c * (colW + gap); y = colH[c]; colH[c] += el.offsetHeight + gap; }
+    let x, y; if (s.x != null && s.y != null) { x = s.x; y = s.y; } else { if (rx > 0 && rx + w > W) { rx = 0; ry += rh + gap; rh = 0; } x = rx; y = ry; rx += w + gap; rh = Math.max(rh, el.offsetHeight); }
     x = Math.max(0, Math.min(x, Math.max(0, W - w))); y = Math.max(0, y); el.style.left = x + 'px'; el.style.top = y + 'px'; maxB = Math.max(maxB, y + el.offsetHeight);
   });
   sns.style.minHeight = Math.max(maxB + 24, 260) + 'px';
