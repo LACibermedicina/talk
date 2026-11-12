@@ -32,7 +32,7 @@ const WHY = {
   weak: 'Contas de saúde são alvo de ataques de senha; senhas fracas facilitam o acesso indevido.',
   https: 'Sem HTTPS, a senha e o prontuário trafegam sem proteção e o navegador bloqueia câmera e microfone.',
   host: 'Cookies seguros só funcionam quando você acessa pelo mesmo endereço configurado.',
-  proxy: 'O Caddy emite o certificado HTTPS sozinho e protege o app da internet direta.',
+  proxy: 'O proxy (Nginx ou Caddy) termina o HTTPS e protege o app da internet direta; ele precisa informar ao app que a conexão original era HTTPS.',
   cookie: 'Cookies Secure impedem que a sessão vaze em conexões sem criptografia.',
   root: 'Se o app for invadido, um processo sem privilégios limita o estrago ao contêiner.',
   sdk: 'É o componente de vídeo do navegador. Sem ele não há teleconsulta com vídeo.',
@@ -73,7 +73,7 @@ export default async function (app) {
   app.get('/api/setup/check', G, async req => {
     const C = [], add = (id, t, ok, level, detail, fix) => C.push({ id, t, ok: !!ok, level, detail, fix });
     add('node', 'Node.js 22 ou superior', +process.versions.node.split('.')[0] >= 22, 'req', 'Versão ' + process.versions.node, 'Use a imagem node:22 do Dockerfile.');
-    try { const [v] = await q('show server_version'), [s] = await q('select coalesce((select ssl from pg_stat_ssl where pid=pg_backend_pid()),false) ssl'); add('db', 'Banco de dados acessível', true, 'req', 'PostgreSQL ' + v.server_version); add('dbssl', 'Conexão com o banco usa TLS', s.ssl, 'rec', s.ssl ? 'Criptografada' : 'Sem TLS', 'Use a connection string do Neon com ?sslmode=require.'); }
+    try { const [v] = await q('show server_version'), [s] = await q('select coalesce((select ssl from pg_stat_ssl where pid=pg_backend_pid()),false) ssl'); add('db', 'Banco de dados acessível', true, 'req', 'PostgreSQL ' + v.server_version); const loop = /@(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i.test(process.env.DATABASE_URL || ''); add('dbssl', 'Conexão com o banco usa TLS', s.ssl || loop, 'rec', s.ssl ? 'Criptografada' : loop ? 'Banco na própria máquina: o tráfego não sai do servidor, TLS dispensado' : 'Sem TLS', 'Use a connection string do Neon com ?sslmode=require.'); }
     catch { add('db', 'Banco de dados acessível', false, 'req', 'Não foi possível conectar', 'Confira DATABASE_URL no .env (Neon: termina com ?sslmode=require) e reinicie.'); }
     try { const p = await pending(); add('mig', 'Estrutura do banco atualizada', !p.length, 'req', p.length ? `${p.length} migração(ões) pendente(s)` : 'Tudo aplicado', 'Clique em “Aplicar migrações”.'); } catch { add('mig', 'Estrutura do banco atualizada', false, 'req', 'Não verificável sem banco', 'Resolva o banco primeiro.'); }
     add('jwt', 'JWT_SECRET forte (32+ caracteres)', (process.env.JWT_SECRET || '').length >= 32, 'req', 'Segredo de sessão', 'Gere com: openssl rand -base64 48');
@@ -82,9 +82,9 @@ export default async function (app) {
     add('https', 'APP_ORIGIN usa HTTPS', /^https:\/\//.test(process.env.APP_ORIGIN || ''), 'rec', process.env.APP_ORIGIN, 'Defina APP_ORIGIN=https://seu.dominio');
     let host = ''; try { host = new URL(process.env.APP_ORIGIN).host; } catch { /* inválido */ }
     const acc = req.headers['x-forwarded-host'] || req.headers.host; add('host', 'Você acessa pelo endereço configurado', host === acc, 'rec', 'Acessando por ' + acc, 'Abra o sistema pelo domínio de APP_ORIGIN (senão os cookies seguros falham).');
-    add('proxy', 'Proxy HTTPS (Caddy) detectado', req.headers['x-forwarded-proto'] === 'https', 'rec', req.headers['x-forwarded-proto'] || 'não detectado', 'Mantenha o Caddy na frente do app (docker compose).');
+    add('proxy', 'Proxy HTTPS (Nginx ou Caddy) detectado', req.headers['x-forwarded-proto'] === 'https', 'rec', req.headers['x-forwarded-proto'] || 'o proxy não envia X-Forwarded-Proto', 'Nginx: no bloco location / do site inclua proxy_set_header X-Forwarded-Proto $scheme; e rode nginx -t && systemctl reload nginx (ou use deploy/vps-fix-proxy.sh). Caddy/Docker: mantenha o Caddy na frente do app.');
     add('cookie', 'Cookies seguros ativos', process.env.COOKIE_SECURE !== 'false', 'rec', 'Secure + SameSite=Strict', 'Remova COOKIE_SECURE=false em produção.');
-    add('root', 'Contêiner roda sem privilégio de root', typeof process.getuid === 'function' && process.getuid() !== 0, 'rec', 'uid ' + (process.getuid ? process.getuid() : '?'), 'Mantenha USER node no Dockerfile.');
+    add('root', 'Roda sem privilégio de root', typeof process.getuid === 'function' && process.getuid() !== 0, 'rec', 'uid ' + (process.getuid ? process.getuid() : '?'), 'Docker: mantenha USER node no Dockerfile. Sem Docker (PM2) é opcional e pode ficar para depois.');
     add('sdk', 'SDK de vídeo (Agora) presente', existsSync(new URL('../../public/vendor/agora.js', import.meta.url)), 'rec', 'public/vendor/agora.js', 'Refaça o build: docker compose build --no-cache app');
     add('mem', 'Memória de 512 MB ou mais', os.totalmem() >= 512 * 2 ** 20, 'rec', Math.round(os.totalmem() / 2 ** 20) + ' MB', 'Use um servidor com mais memória.');
     add('tz', 'Fuso horário definido (TZ)', !!process.env.TZ, 'rec', process.env.TZ || 'não definido', 'Defina TZ=America/Sao_Paulo no .env (lembretes e relatórios usam a hora local).');
