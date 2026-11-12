@@ -42,11 +42,11 @@ instalar_atualizar -repertorio_git "$REPO" -porta "$PORTA" -subdominio "$SUBDOMI
 mudou=0
 for f in $(grep -rlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/sites-available" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u); do
   if grep -Eq "proxy_pass\s+http://(127\.0\.0\.1|localhost):[0-9]+" "$f" && ! grep -Eq "proxy_pass\s+http://(127\.0\.0\.1|localhost):${PORTA}\b" "$f"; then
-    cp -p "$f" "$f.bak.$(date +%s)"
+    mkdir -p /root/backup-nginx; cp -p "$f" "/root/backup-nginx/$(basename "$f").$(date +%s).bak"
     sed -Ei "s#(proxy_pass\s+http://(127\.0\.0\.1|localhost)):[0-9]+#\1:${PORTA}#" "$f"; mudou=1; echo "proxy de $f -> $PORTA"
   fi
 done
-if [ "$mudou" = 1 ]; then nginx -t && systemctl reload nginx || { echo "nginx -t falhou: restaure os .bak"; exit 1; }; fi
+if [ "$mudou" = 1 ]; then nginx -t && systemctl reload nginx || { echo "nginx -t falhou: restaure as cópias de /root/backup-nginx"; exit 1; }; fi
 sleep 3
 curl -fsS "http://127.0.0.1:${PORTA}/api/health" >/dev/null && echo "✔ app respondendo na porta $PORTA" || { echo "✘ app não respondeu em 127.0.0.1:$PORTA (veja: pm2 logs talk)"; exit 1; }
 WRAP

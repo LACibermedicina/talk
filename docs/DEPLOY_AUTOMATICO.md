@@ -20,3 +20,9 @@ Actions → deploy → Run workflow. O log termina com `✔ app respondendo na p
 - A chave só consegue rodar `talk-deploy` (sem terminal, sem túnel). Cada troca de proxy gera `.bak.<data>` ao lado do arquivo do Nginx.
 - Mudar a porta altera só `/etc/talk-deploy.conf`; o proxy de `talks.m3d.pro` é reescrito automaticamente.
 - Nunca cole a chave privada em conversas ou issues.
+
+## Corrigir avisos do instalador no VPS (Nginx/HTTPS/pasta data)
+```
+curl -fsSL https://raw.githubusercontent.com/LACibermedicina/talk/main/deploy/vps-fix-proxy.sh | bash
+```
+Garante a pasta `data`, os cabeçalhos do proxy (`X-Forwarded-Proto`, WebSocket etc.) no site do Nginx, valida com `nginx -t` (desfaz se falhar) e reinicia o app. Cópias ficam em `/root/backup-nginx`. Para também rodar o app sem root: `USER_SEGURO=1 bash vps-fix-proxy.sh`.
