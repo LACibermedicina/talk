@@ -2,10 +2,10 @@
 import { z } from 'zod';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import os from 'node:os';
-import { existsSync, renameSync } from 'node:fs';
+import { existsSync, renameSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import argon2 from 'argon2';
 import { audit } from '../audit.js';
-import { cfgFile } from '../boot/config.js';
+import { cfgFile, dataDir } from '../boot/config.js';
 import { q } from '../db.js';
 import { testService } from '../setupTests.js';
 import { saveSettings, KEYS } from '../settings.js';
@@ -39,9 +39,13 @@ const WHY = {
   mem: 'Criptografia de senhas e geração de PDFs consomem memória; abaixo de 512 MB o servidor pode ser encerrado pelo sistema.',
   tz: 'Lembretes, agenda e relatórios usam a hora local; sem fuso, horários saem em UTC.'
 };
+const codeFile = () => dataDir() + '/setup-code.txt';
 export async function initSetup(log) {
   if (!(await needed())) return; const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', b = randomBytes(12);
   code = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(process.env.SETUP_CODE || '') ? process.env.SETUP_CODE : [0, 4, 8].map(i => [...b.subarray(i, i + 4)].map(x => A[x % A.length]).join('')).join('-');
+  const cf = codeFile(); let old = ''; try { old = readFileSync(cf, 'utf8').trim(); } catch { /* sem arquivo */ }
+  if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(process.env.SETUP_CODE || '') && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(old)) code = old;
+  try { mkdirSync(dataDir(), { recursive: true }); writeFileSync(cf, code + '\n', { mode: 0o600 }); } catch { /* sem escrita: o log continua mostrando */ }
   const msg = `INSTALAÇÃO: abra o endereço do sistema e informe o código ${code}`; log.warn(msg); console.log('\n=============================\n' + msg + '\n=============================\n');
 }
 const same = (a, b) => typeof a === 'string' && b && a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
@@ -106,6 +110,6 @@ export default async function (app) {
     const rep = await createUsers(list);
     if (b.vincular) { const ps = await q("select id from users where role='paciente'"), fs = await q("select id from users where role in('medico','fisio','enfermeiro','nutricionista','farmaceutico','profissional','cuidador')"); for (const p of ps) for (const f of fs) await q('insert into care_team values($1,$2) on conflict do nothing', [p.id, f.id]); }
     await saveSettings({ SIGNUP_MODE: b.signup });
-    await q("insert into app_settings(key,value_enc) values('setup_done','x') on conflict do nothing"); done = true; code = null; return { credenciais: rep };
+    await q("insert into app_settings(key,value_enc) values('setup_done','x') on conflict do nothing"); done = true; code = null; try { rmSync(codeFile(), { force: true }); } catch { /* ok */ } return { credenciais: rep };
   });
 }
