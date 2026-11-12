@@ -463,3 +463,5 @@ body:has(.app .rail) #langbar{display:none}
 @media(max-width:640px){.bst{flex-direction:column;align-items:flex-start}}
 
 .wz-card h1:focus,#wzh:focus{outline:none}
+
+.cv .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0;line-height:1.35}.cv .chk input[type=checkbox]{width:auto;flex:none;margin-top:3px}
