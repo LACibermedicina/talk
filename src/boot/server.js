@@ -10,7 +10,10 @@ import { saveConfig, genKeys, validKey, validDbUrl, originOf, newCode, dataDir }
 import { bootChecks } from './checks.js';
 const same = (a, b) => typeof a === 'string' && b && a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 /** Testa a conexão e as permissões do banco, devolvendo uma mensagem em linguagem simples. */
+/** Sem TLS: remove sslmode/ssl da URL, pois o driver dá prioridade à URL sobre a opção ssl. */
+export const noSslUrl = u => u.replace(/([?&])(sslmode|ssl|sslrootcert)=[^&]*&?/gi, '$1').replace(/[?&]$/, '');
 export async function testDb(url, { ssl = true } = {}) {
+  if (!ssl) url = noSslUrl(url);
   if (!validDbUrl(url)) return { ok: false, message: 'O endereço não parece uma connection string do PostgreSQL.', hint: 'Ela começa com postgresql:// e tem usuário, senha, servidor e nome do banco. No Neon: Dashboard → Connect → copie a "connection string".' };
   const c = new pg.Client({ connectionString: url, ssl: ssl ? { rejectUnauthorized: true } : false, connectionTimeoutMillis: 10000 });
   try {
@@ -19,7 +22,7 @@ export async function testDb(url, { ssl = true } = {}) {
     try { await c.query('create table if not exists _m3d_probe(x int)'); await c.query('drop table _m3d_probe'); } catch { return { ok: false, message: 'Conectou, mas este usuário não pode criar tabelas.', hint: 'O sistema cria sua estrutura sozinho. Use o usuário dono do banco (no Neon, o usuário padrão do projeto) ou conceda CREATE no schema public.' }; }
     return { ok: true, message: 'Conectado ao PostgreSQL ' + v + (tls ? ' com TLS' : ' (sem TLS)'), version: v, tls };
   } catch (e) {
-    const m = String(e.message || e), hint = /ENOTFOUND|EAI_AGAIN/.test(m) ? 'O nome do servidor não foi encontrado: confira o endereço e o DNS do seu servidor.' : /password|authentication/i.test(m) ? 'Usuário ou senha incorretos. Se acabou de trocar a senha no painel, copie a connection string de novo.' : /SSL|TLS|certificate/i.test(m) ? 'Falha na criptografia da conexão. Para o Neon, mantenha ?sslmode=require. Em banco local sem TLS, marque a opção correspondente.' : /timeout|ECONNREFUSED|ETIMEDOUT/i.test(m) ? 'Não foi possível alcançar o servidor do banco: confira firewall (porta 5432/443) e se o banco está ativo.' : 'Confira a connection string.';
+    const m = String(e.message || e), hint = /ENOTFOUND|EAI_AGAIN/.test(m) ? 'O nome do servidor não foi encontrado: confira o endereço e o DNS do seu servidor.' : /password|authentication/i.test(m) ? 'Usuário ou senha incorretos. Se acabou de trocar a senha no painel, copie a connection string de novo.' : /SSL|TLS|certificate/i.test(m) ? (/@(127\.0\.0\.1|localhost|\[::1\])[:/]/.test(url) ? 'Este é um banco local com certificado autoassinado: DESMARQUE a opção "Exigir conexão criptografada (TLS)" logo abaixo do campo e teste de novo.' : 'Falha na criptografia da conexão. Para o Neon, mantenha ?sslmode=require. Em banco local sem TLS, desmarque "Exigir conexão criptografada".') : /timeout|ECONNREFUSED|ETIMEDOUT/i.test(m) ? 'Não foi possível alcançar o servidor do banco: confira firewall (porta 5432/443) e se o banco está ativo.' : 'Confira a connection string.';
     return { ok: false, message: 'Não foi possível conectar: ' + m.slice(0, 160), hint };
   } finally { await c.end().catch(() => {}); }
 }
