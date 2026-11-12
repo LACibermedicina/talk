@@ -120,7 +120,7 @@ const mvReset = () => { MOV.forEach(([, k]) => { try { localStorage.removeItem('
 const ribSched = () => { if (ribT) return; ribT = requestAnimationFrame(() => { ribT = 0; ribTop(); applyMovables(); }); };
 new MutationObserver(ms => { if (ms.every(m => m.target.closest && m.target.closest('#rbar'))) return; ribSched(); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
 /* dock de funcionalidades (estilo macOS): fica visível na área de trabalho e dentro de qualquer funcionalidade aberta */
-function appDockH() { const act = v => (v === 'biblioteca' ? !!(window.CONSULTA && CONSULTA.K.wins.lib && CONSULTA.K.wins.lib.st !== 'closed') : S.view === v); return `<nav class="hdock" aria-label="Funcionalidades">${HOME_APPS.filter(a => a[4]()).map(([v, t, i, c]) => `<button class="happ ${act(v) ? 'on' : ''}" data-a="adk" data-p="${v}" style="--pc:${c}" aria-pressed="${act(v)}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki">${ic(i, 26)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`).join('')}</nav>`; }
+function appDockH() { const act = v => (v === 'biblioteca' ? !!(window.CONSULTA && CONSULTA.K.wins.lib && CONSULTA.K.wins.lib.st !== 'closed') : S.view === v); return `<nav class="hdock" aria-label="Funcionalidades">${HOME_APPS.filter(a => a[4]() && !dHidden(a[0])).map(([v, t, i, c]) => `<button class="happ ${act(v) ? 'on' : ''}" data-a="adk" data-p="${v}" style="--pc:${c}" aria-pressed="${act(v)}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki">${ic(i, 26)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`).join('')}</nav>`; }
 A.adk = v => { if (v === 'biblioteca') { const w = window.CONSULTA && CONSULTA.K.wins.lib; if (w && w.st && w.st !== 'closed') { CONSULTA.closeAll(); render(); } else A.view('biblioteca'); return; } if (S.view === v) A.gohome(); else A.view(v); };
 const dockIcon = (p, on) => `<button class="dk ${on ? 'on' : ''}" data-a="dkc" data-p="${p.id}" style="--pc:${p.c}" aria-pressed="${on}" aria-label="${on ? 'Minimizar' : 'Abrir'} painel ${p.t}" title="${p.t}"><span class="dki">${ic(p.i, 24)}</span><span class="dkt">${ES(p.t)}</span></button>`;
 function dashH(v) {
@@ -266,12 +266,14 @@ function homeLoad() {
   api('/notifications').then(l => { S.hn = (l || []).slice(0, 30); }).catch(() => { S.hn = []; }).then(() => { if (isHome()) render(); });
 }
 // post-its do desktop: mover (arrastar o título), minimizar, expandir em detalhe; posição e estado ficam salvos neste navegador
+const dHidden = id => { if (id === 'cfg') return false; try { return ((lay().dhide) || []).includes(id); } catch { return false; } }; // itens do desktop ocultados pelo usuário nas Configurações (padrão: todos visíveis)
 const pitKey = () => 'm3d_pit_' + (S.me ? S.me.id : '');
 const PIT = { get() { try { return JSON.parse(localStorage.getItem(pitKey())) || {}; } catch { return {}; } }, set(o) { try { localStorage.setItem(pitKey(), JSON.stringify(o)); } catch { /* sem armazenamento */ } } };
 const capS = x => String(x || '').charAt(0).toUpperCase() + String(x || '').slice(1).replace(/_/g, ' ');
 let PMIN = [];
 function pitCard(id, cls, rot, ttl, brief, detail, foot) {
   const st = (PIT.get()[id] || {}).st || 'open', big = st === 'big', fold = st === 'fold';
+  if (dHidden('pit:' + id)) return '';
   if (st === 'min') { PMIN.push({ id, cls, ttl }); return ''; }
   return `<article class="sn ${cls} ${fold ? 'fold' : ''} ${big ? 'big' : ''}" data-pit="${id}" style="--rot:${big || fold ? 0 : rot}deg"><i class="snpin" aria-hidden="true"></i><header class="sn-h" data-pitd title="${ES('Arraste para mover · duplo clique recolhe/abre')}"><h3>${ES(ttl)}</h3><span class="sp"></span><button data-a="pitmin" data-p="${id}" aria-label="Minimizar para a pilha lateral" title="Minimizar para a pilha lateral">▁</button><button data-a="pitbig" data-p="${id}" aria-label="${big ? 'Recolher' : 'Expandir em detalhe'}" title="${big ? 'Recolher' : 'Expandir em detalhe'}">${big ? '⤡' : '⤢'}</button></header><div class="sn-b">${big ? detail : brief}</div>${big || fold ? '' : foot || ''}</article>`;
 }
@@ -296,7 +298,7 @@ function homeH() {
     pitCard('nt', 'pt-p', -.8, 'Notificações', nt.length ? nt.map(n => row('view', 'notif', E(n.title), E(n.patient || ''))).join('') : empty(S.hn ? 'Nenhuma notificação nova.' : 'Carregando…'), dNt, nonPac() ? more('Ver todas', 'notif') : ''),
     nonPac() ? pitCard('nb', 'pt-b', 1.4, 'Anotações importantes', nb.length ? nb.map(c => row('view', 'notas', E(c.name), c.text ? E(c.text).slice(0, 60) : '')).join('') : empty('Salve cartões a partir do mapa de relações.'), dNb, more('Abrir anotações', 'notas')) : ''
   ].join('');
-  const apps = HOME_APPS.filter(a => a[4]()).map(([v, t, i, c]) => `<button class="happ" data-a="view" data-p="${v}" style="--pc:${c}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki">${ic(i, 26)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`).join('');
+  const apps = HOME_APPS.filter(a => a[4]() && !dHidden(a[0])).map(([v, t, i, c]) => `<button class="happ" data-a="view" data-p="${v}" style="--pc:${c}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki">${ic(i, 26)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`).join('');
   return `<div class="tb"><button class="menu" data-a="menu" aria-label="Menu">☰</button><h2 style="margin:0;font-size:17px">${ES('Início')}</h2><span class="sp"></span></div>
   <div class="home"><img class="home-logo" src="/logo.png" alt=""><div class="home-in"><div class="home-hi"><h1>${ES('Olá')}, ${E(nm)}</h1><span class="mu">${dloc(now, { weekday: 'long', day: 'numeric', month: 'long' })}</span><span class="sp"></span><button class="lk" data-a="pitreset">${ES('Reorganizar post-its')}</button></div><div class="sns" id="sns">${posts}</div></div><div class="pstack" id="pstack" aria-label="Post-its minimizados"></div>
   ${appDockH()}</div>`;
@@ -316,6 +318,8 @@ const pitSet = (id, o) => { const P = PIT.get(); P[id] = { ...(P[id] || {}), ...
 A.pitmin = id => { const st = (PIT.get()[id] || {}).st; pitSet(id, { st: st === 'min' ? 'open' : 'min' }); render(); };
 A.pitbig = id => { const st = (PIT.get()[id] || {}).st; S.pz = S.pz || {}; S.pz[id] = ++S.pzc || (S.pzc = 30); pitSet(id, { st: st === 'big' ? 'open' : 'big' }); render(); const el = document.querySelector(`[data-pit="${id}"]`); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
 A.pitfold = id => { const st = (PIT.get()[id] || {}).st; pitSet(id, { st: st === 'fold' ? 'open' : 'fold' }); render(); };
+A.dskall = () => { lay().dhide = []; saveLay(); render(); };
+A.dsknone = () => { const L = lay(); L.dhide = [...['ag', 'tk', 'nt', 'nb'].map(i => 'pit:' + i), ...HOME_APPS.filter(a => a[4]() && a[0] !== 'cfg').map(a => a[0])]; saveLay(); render(); };
 A.pitreset = () => { PIT.set({}); render(); toast('Post-its reorganizados'); };
 let pdrag = null;
 document.addEventListener('pointerdown', e => {
