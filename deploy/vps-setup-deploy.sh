@@ -47,6 +47,7 @@ for f in $(grep -rlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/site
   fi
 done
 if [ "$mudou" = 1 ]; then nginx -t && systemctl reload nginx || { echo "nginx -t falhou: restaure as cópias de /root/backup-nginx"; exit 1; }; fi
+[ -x /usr/local/bin/talk-as-user ] && [ -e /etc/talk-as-user.on ] && /usr/local/bin/talk-as-user
 sleep 3
 curl -fsS "http://127.0.0.1:${PORTA}/api/health" >/dev/null && echo "✔ app respondendo na porta $PORTA" || { echo "✘ app não respondeu em 127.0.0.1:$PORTA (veja: pm2 logs talk)"; exit 1; }
 WRAP

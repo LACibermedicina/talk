@@ -7,6 +7,14 @@ SUBDOMINIO="${SUBDOMINIO:-talks.m3d.pro}"; APP_DIR="${APP_DIR:-/var/www/talk}"; 
 [ "$(id -u)" = 0 ] || [ -n "${SKIP_ROOT:-}" ] || { echo "Rode como root."; exit 1; }
 mkdir -p "$APP_DIR/data" && echo "✔ pasta $APP_DIR/data pronta"
 
+# HTTPS: se o domínio ainda não responde por TLS neste servidor, emite o certificado (certbot)
+if ! curl -skI --max-time 8 --resolve "$SUBDOMINIO:443:127.0.0.1" "https://$SUBDOMINIO/" >/dev/null 2>&1; then
+  if command -v certbot >/dev/null 2>&1; then
+    echo "• sem HTTPS ativo para $SUBDOMINIO: emitindo certificado (certbot)"
+    certbot --nginx -d "$SUBDOMINIO" --non-interactive --agree-tos --register-unsafely-without-email --redirect && echo "✔ certificado emitido e HTTP redirecionado para HTTPS" || echo "! certbot falhou (o DNS de $SUBDOMINIO precisa apontar para este servidor e a porta 80 estar aberta)"
+  else echo "! certbot não instalado: apt install -y certbot python3-certbot-nginx"; fi
+else echo "✔ HTTPS já responde para $SUBDOMINIO"; fi
+
 FILES=$(grep -rlE "server_name[^;]*\b${SUBDOMINIO//./\\.}\b" "$NGINX_DIR/sites-enabled" "$NGINX_DIR/conf.d" 2>/dev/null | sort -u)
 [ -n "$FILES" ] || { echo "✘ Não achei o site $SUBDOMINIO em $NGINX_DIR. Mande: ls $NGINX_DIR/sites-enabled"; exit 1; }
 mudou=0
@@ -50,10 +58,19 @@ fi
 command -v pm2 >/dev/null && pm2 restart "$PM2_NOME" >/dev/null 2>&1 && echo "✔ app reiniciado (pm2 restart $PM2_NOME)"
 
 if [ -n "${USER_SEGURO:-}" ]; then
-  id talk >/dev/null 2>&1 || useradd -r -m -s /bin/bash talk
   PORTA=$(. /etc/talk-deploy.conf 2>/dev/null; echo "${PORTA:-7012}")
-  pm2 delete "$PM2_NOME" >/dev/null 2>&1; chown -R talk:talk "$APP_DIR"
-  su - talk -c "cd $APP_DIR && PORT=$PORTA pm2 start src/server.js --name $PM2_NOME && pm2 save" && echo "✔ app agora roda como usuário talk (sem root)"
-  echo "! para iniciar com o servidor: pm2 startup systemd -u talk --hp /home/talk (e rode o comando que ele mostrar)"
+  id talk >/dev/null 2>&1 || useradd -r -m -s /bin/bash talk
+  cat > /usr/local/bin/talk-as-user <<AS
+#!/usr/bin/env bash
+# Põe o app para rodar como usuário "talk" (sem root). Chamado após cada atualização.
+pm2 delete $PM2_NOME >/dev/null 2>&1; pm2 save >/dev/null 2>&1
+chown -R talk:talk $APP_DIR
+git config --global --add safe.directory $APP_DIR >/dev/null 2>&1
+su - talk -c "cd $APP_DIR && (pm2 delete $PM2_NOME >/dev/null 2>&1; PORT=$PORTA TZ=\${TZ:-America/Sao_Paulo} pm2 start src/server.js --name $PM2_NOME && pm2 save)"
+AS
+  chmod 755 /usr/local/bin/talk-as-user
+  /usr/local/bin/talk-as-user && echo "✔ app rodando como usuário talk (sem root)"
+  env PATH="$PATH" pm2 startup systemd -u talk --hp /home/talk >/dev/null 2>&1 && echo "✔ inicia sozinho com o servidor (como talk)"
+  touch /etc/talk-as-user.on
 fi
 echo; echo "Agora abra https://$SUBDOMINIO e clique em 'Verificar de novo'."
