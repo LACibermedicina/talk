@@ -2220,6 +2220,8 @@ window.I18N_DICT = {
 "Atalhos do chat por interlocutor": ["Atajos del chat según el interlocutor", "", "Chat shortcuts by contact", "按联系人区分的聊天快捷方式"],
 "Resumo e próximos passos": ["Resumen y próximos pasos", "", "Summary and next steps", "总结与后续步骤"],
 "Ajuda e guia passo a passo": ["Ayuda y guía paso a paso", "", "Help and step-by-step guide", "帮助与分步指南"],
+"Mostrar menu": ["Mostrar menú", "", "Show menu", "显示菜单"],
+"Ocultar menu": ["Ocultar menú", "", "Hide menu", "隐藏菜单"],
 "Ajuda e guia (Alt+G)": ["Ayuda y guía (Alt+G)", "", "Help and guide (Alt+G)", "帮助与指南 (Alt+G)"],
 "Expandir todos os blocos": ["Expandir todos los bloques", "", "Expand all blocks", "展开所有分块"],
 "{0} pacientes online agora": ["{0} pacientes en línea ahora", "", "{0} patients online now", "{0} 位患者当前在线"],

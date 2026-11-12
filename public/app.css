@@ -465,3 +465,15 @@ body:has(.app .rail) #langbar{display:none}
 .wz-card h1:focus,#wzh:focus{outline:none}
 
 .cv .chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0;line-height:1.35}.cv .chk input[type=checkbox]{width:auto;flex:none;margin-top:3px}
+
+/* aba vertical do logo (celular): o menu lateral abre/fecha ao tocar no logo */
+.lgtab{display:none}
+@media(max-width:820px){
+ .brand[data-a="logo"]{cursor:pointer}
+ .lgtab{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:8;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px 10px calc(6px + env(safe-area-inset-left));background:var(--sf);color:var(--ink);border:1px solid var(--ln);border-left:0;border-radius:0 14px 14px 0;box-shadow:4px 0 16px #0002;cursor:pointer;font:600 15px/1 Inter,system-ui,sans-serif;min-height:44px}
+ .lgtab img{width:22px;height:22px}
+ .lgtab span{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.04em;white-space:nowrap}
+ .lgtab b{color:var(--ac)}
+ .list.open~.lgtab{display:none}
+}
+@media(max-width:820px) and (prefers-reduced-motion:no-preference){.lgtab{animation:lgin .2s ease-out}}@keyframes lgin{from{opacity:0;transform:translate(-100%,-50%)}}

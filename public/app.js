@@ -128,7 +128,7 @@ document.addEventListener('submit', e => { if (e.target.dataset && e.target.data
 function render() {
   const a = $('#app'); if (!S.me) { a.className = ''; a.innerHTML = S.su ? signupH() : loginH(); return; }
   const f = document.activeElement, id = f && f.id, v = f && f.value; a.className = 'app' + (S.np ? ' np' : '');
-  a.innerHTML = `${railH()}<aside class="list ${S.lo ? 'open' : ''}">${listH()}</aside><section class="chat">${CENTER[S.view]()}</section><aside class="panel">${panelH()}</aside>`;
+  a.innerHTML = `${railH()}<aside class="list ${S.lo ? 'open' : ''}">${listH()}</aside><section class="chat">${CENTER[S.view]()}</section><aside class="panel">${panelH()}</aside><button class="lgtab" data-a="logo" aria-label="Mostrar menu" title="Mostrar menu" aria-expanded="false"><img src="/logo.png" alt=""><span translate="no">Talk<b>.M3D</b></span></button>`;
   if (id && $('#' + id) && id !== 'dk' && id !== 'xs') { const e = $('#' + id); e.focus(); if (v != null && e.tagName !== 'SELECT') e.value = v; }
   const m = $('#ms'); if (m) m.scrollTop = m.scrollHeight;
 }
