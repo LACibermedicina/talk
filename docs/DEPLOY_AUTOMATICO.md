@@ -1,3 +1,18 @@
+# Atualização automática (jeito mais simples, sem segredos no GitHub)
+
+No VPS, uma vez, como root:
+```
+cd /var/www/talk && git pull && bash deploy/install-auto-update.sh
+```
+A cada 2 minutos o servidor confere o GitHub. Se houver versão nova na branch `main`, ele atualiza o código, instala dependências (só se `package*.json` mudou), reinicia o app (`pm2 restart talk`) e confere `/api/health`. Se o app não subir, volta sozinho para a versão anterior. As migrações do banco rodam no início do app.
+
+- Acompanhar: `tail -f /var/log/talk-auto-update.log`
+- Rodar na hora: `/var/www/talk/deploy/auto-update.sh`
+- Desligar: `bash /var/www/talk/deploy/install-auto-update.sh --remover`
+- Se houver alterações locais no servidor (`git status`), a atualização pausa e avisa no log, para não perder nada.
+
+---
+
 # Implantação automática GitHub → VPS
 
 Fluxo: `git push` no `main` → CI passa → workflow `deploy` conecta por SSH no VPS (159.223.22.82) → o comando `talk-deploy` atualiza o código, reinicia o app e garante que o proxy do subdomínio aponte para a porta certa.
