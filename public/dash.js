@@ -272,7 +272,7 @@ function homeLoad() {
   api('/notifications').then(l => { S.hn = (l || []).slice(0, 30); }).catch(() => { S.hn = []; }).then(() => { if (isHome()) render(); });
 }
 // post-its do desktop: mover (arrastar o título), minimizar, expandir em detalhe; posição e estado ficam salvos neste navegador
-const dHidden = id => { if (id === 'cfg') return false; try { return ((lay().dhide) || []).includes(id); } catch { return false; } }; // itens do desktop ocultados pelo usuário nas Configurações (padrão: todos visíveis)
+const dHidden = id => { if (id === 'cfg' || id === 'rdesk') return false; try { return ((lay().dhide) || []).includes(id); } catch { return false; } }; // itens do desktop ocultados pelo usuário nas Configurações (padrão: todos visíveis)
 const pitKey = () => 'm3d_pit_' + (S.me ? S.me.id : '');
 const PIT = { get() { try { return JSON.parse(localStorage.getItem(pitKey())) || {}; } catch { return {}; } }, set(o) { try { localStorage.setItem(pitKey(), JSON.stringify(o)); } catch { /* sem armazenamento */ } } };
 const capS = x => String(x || '').charAt(0).toUpperCase() + String(x || '').slice(1).replace(/_/g, ' ');
@@ -325,7 +325,7 @@ A.pitmin = id => { const st = (PIT.get()[id] || {}).st; pitSet(id, { st: st === 
 A.pitbig = id => { const st = (PIT.get()[id] || {}).st; S.pz = S.pz || {}; S.pz[id] = ++S.pzc || (S.pzc = 30); pitSet(id, { st: st === 'big' ? 'open' : 'big' }); render(); const el = document.querySelector(`[data-pit="${id}"]`); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
 A.pitfold = id => { const st = (PIT.get()[id] || {}).st; pitSet(id, { st: st === 'fold' ? 'open' : 'fold' }); render(); };
 A.dskall = () => { lay().dhide = []; saveLay(); render(); };
-A.dsknone = () => { const L = lay(); L.dhide = [...['ag', 'tk', 'nt', 'nb'].map(i => 'pit:' + i), ...HOME_APPS.filter(a => a[4]() && a[0] !== 'cfg').map(a => a[0])]; saveLay(); render(); };
+A.dsknone = () => { const L = lay(); L.dhide = [...['ag', 'tk', 'nt', 'nb'].map(i => 'pit:' + i), ...HOME_APPS.filter(a => a[0] !== 'rdesk' && a[4]() && a[0] !== 'cfg').map(a => a[0])]; saveLay(); render(); };
 A.pitreset = () => { PIT.set({}); render(); toast('Post-its reorganizados'); };
 let pdrag = null;
 document.addEventListener('pointerdown', e => {
@@ -382,3 +382,38 @@ window.M3D_CRUMB = h => {
   });
 };
 { let wasMob = mob(); addEventListener('resize', () => { const m = mob(); if (m !== wasMob) { wasMob = m; if (S.me) render(); } }); }
+
+/* ===== Memória do desktop: a organização do usuário (quadros, post-its, dock, menu lateral, tela aberta) volta como ficou, entre cliques e entre sessões.
+   Só o ícone "Reiniciar desktop" do dock devolve tudo ao padrão. ===== */
+window.M3D_KEEP = true;   // abrir outra funcionalidade não fecha mais os quadros: cada uma guarda como o usuário deixou
+try { S.np = localStorage.getItem('m3d_np') === '1'; } catch { /* sem armazenamento */ }
+const lastKey = () => 'm3d_last_' + S.me.id, railKey = () => 'm3d_rail_' + S.me.id;
+function saveDesk() {
+  if (!S.me) return;
+  try {
+    localStorage.setItem('m3d_np', S.np ? '1' : '0');
+    localStorage.setItem(railKey(), S.rail || 'users');
+    const home = S.view === 'chat' && !S.room;
+    if (home || (S.view === 'chat' && S.room)) localStorage.setItem(lastKey(), 'home');
+    else if (HOME_APPS.some(a => a[0] === S.view && a[0] !== 'rdesk')) localStorage.setItem(lastKey(), S.view);
+  } catch { /* sem armazenamento */ }
+}
+{ const _rd = render; render = function () { const r = _rd.apply(this, arguments); saveDesk(); return r; }; }
+{ const _al = afterLogin; afterLogin = async function () {
+  await _al(); if (!S.me || S.me.must_change) return;
+  try { const r = localStorage.getItem(railKey()); if (r && RAILS[r]) S.rail = r; } catch { /* ok */ }
+  let last = ''; try { last = localStorage.getItem(lastKey()) || ''; } catch { /* ok */ }
+  if (last && last !== 'home' && last !== 'rdesk') { const app = HOME_APPS.find(a => a[0] === last); let ok = false; try { ok = !!(app && app[4]()); } catch { ok = false; } if (ok) setTimeout(() => { if (S.me && S.view === 'chat' && !S.room) A.view(last); }, 80); }
+}; }
+
+/* ícone "Reiniciar desktop" no fim do dock */
+HOME_APPS.push(['rdesk', 'Reiniciar desktop', '<path d="M20 12a8 8 0 10-2.5 5.8M20 5v5h-5"/><path d="M9 12h6"/>', '#d9363e', () => true]);
+HDESC.rdesk = 'Volta ao padrão quadros, post-its, dock e menu lateral';
+A.rdesk = () => {
+  if (!confirm('Reiniciar o desktop? Quadros, post-its, dock, menu lateral e a última tela aberta voltam ao padrão. Suas anotações e dados não são apagados.')) return;
+  const id = S.me.id, drop = [];
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && (k.startsWith('m3d_dw_' + id + '_') || k.startsWith('m3d_mv_') || k === 'm3d_layout_' + id || k === lastKey() || k === railKey() || k === pitKey() || k === 'm3d_np' || k === 'm3d_cal_sz')) drop.push(k); } drop.forEach(k => localStorage.removeItem(k)); } catch { /* sem armazenamento */ }
+  S.dws = {}; S.lay = null; S.np = false; S.rail = 'users'; S.dwm = false; try { if (window.CONSULTA) CONSULTA.closeAll(); } catch { /* ok */ }
+  mvReset(); S.dz = 10; S.dzs = {}; A.gohome(); toast('Desktop reiniciado');
+};
+{ const _adk = A.adk; A.adk = v => v === 'rdesk' ? A.rdesk() : _adk(v); const _v = A.view; A.view = p => p === 'rdesk' ? A.rdesk() : _v(p); }
