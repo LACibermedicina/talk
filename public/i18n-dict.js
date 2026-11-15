@@ -2913,5 +2913,17 @@ window.I18N_DICT = {
 "Vamos criar a sua conta!": ["¡Vamos a crear tu cuenta!", "", "Let's create your account!", "我们来创建你的账户吧！"],
 "Arraste para girar · dê 2 cliques num campo (ou Tab) para digitar · role para aproximar · clique na logo para voltar à versão normal": ["Arrastra para girar · haz doble clic en un campo (o Tab) para escribir · desplaza para acercar · haz clic en el logo para volver a la versión normal", "", "Drag to rotate · double-click a field (or Tab) to type · scroll to zoom · click the logo to return to the normal version", "拖动旋转 · 双击输入框（或按 Tab）输入 · 滚动缩放 · 点击标志返回普通版本"],
 "Voltar à versão normal": ["Volver a la versión normal", "", "Back to the normal version", "返回普通版本"],
-"Clique para voltar à versão normal": ["Haz clic para volver a la versión normal", "", "Click to return to the normal version", "点击返回普通版本"]
+"Clique para voltar à versão normal": ["Haz clic para volver a la versión normal", "", "Click to return to the normal version", "点击返回普通版本"],
+"Carregando o Talk.M3D…": ["Cargando Talk.M3D…", "", "Loading Talk.M3D…", "正在加载 Talk.M3D……"],
+"Preparando a sua tela…": ["Preparando tu pantalla…", "", "Getting your screen ready…", "正在准备你的界面……"],
+"Toque no mascote para brincar enquanto carregamos.": ["Toca la mascota para jugar mientras cargamos.", "", "Tap the mascot to play while we load.", "加载时可点击吉祥物玩耍。"],
+"Brincar com o Secreto-Bot": ["Jugar con Secreto-Bot", "", "Play with Secreto-Bot", "和 Secreto-Bot 玩耍"],
+"Opa! Quem me cutucou?": ["¡Ey! ¿Quién me tocó?", "", "Whoa! Who poked me?", "哎呀！谁戳我？"],
+"Hihi, isso faz cócegas!": ["¡Jeje, me hace cosquillas!", "", "Hehe, that tickles!", "嘻嘻，好痒！"],
+"Aquecendo o estetoscópio…": ["Calentando el estetoscopio…", "", "Warming up the stethoscope…", "正在加热听诊器……"],
+"Medindo a temperatura do servidor: 36,5 °C!": ["Midiendo la temperatura del servidor: ¡36,5 °C!", "", "Taking the server's temperature: 36.5 °C!", "正在测量服务器体温：36.5 °C！"],
+"Já estamos quase lá!": ["¡Ya casi llegamos!", "", "We're almost there!", "马上就好！"],
+"Dá uma olhadinha: estou ensaiando uma dança!": ["¡Mira: estoy ensayando un baile!", "", "Look: I'm rehearsing a dance!", "看，我在排练舞蹈！"],
+"Reflexo ótimo, doutor(a)!": ["¡Reflejos excelentes, doctor(a)!", "", "Great reflexes, doctor!", "反射很棒，医生！"],
+"Prometo não demorar!": ["¡Prometo no tardar!", "", "I promise not to take long!", "保证不会太久！"]
 };

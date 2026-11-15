@@ -27,12 +27,12 @@
     return `<div class="sc" id="imv-sc">${slab(560, 560, 44)}
       <div class="obj" style="transform:translate3d(${BOT.x}px,0,${BOT.z - 6}px)">${stool}</div>
       <div class="obj" style="transform:translate3d(60px,-1px,30px)"><div class="obj kbr">${face('kb', 420, 190, 'translate3d(0,0,95px) rotateX(90deg)', keysHTML())}</div></div>
-      ${face('hint', 320, 40, 'translate3d(60px,-1px,252px) rotateX(90deg)', '<button type="button" id="imv-cr">Ainda não tem conta? <u>Criar conta</u></button>')}
+      ${face('hint', 420, 40, 'translate3d(60px,-1px,252px) rotateX(90deg)', '<button type="button" id="imv-cr">Ainda não tem conta? <u>Criar conta</u></button>')}
       <div class="ringw" id="imv-ring" style="transform:translate3d(60px,-2px,125px) rotateX(90deg)"><b></b><b></b><b></b></div>
       <div class="obj" style="transform:translate3d(60px,0,-170px) rotateY(-14deg)">
         ${two('panel', 340, 270, 'translate3d(0,-135px,0)', panelF, '<div class="pn bkp"></div>')}
         ${two('logo', 440, 80, 'translate3d(20px,-350px,0)', logo)}
-        ${two('chip', 190, 40, 'translate3d(-150px,-490px,30px) rotateY(18deg)', '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><em></em><span>Português</span>')}
+        ${two('chip', 290, 52, 'translate3d(20px,-430px,0)', window.I18N ? I18N.flagsHTML() : '')}
       </div>
       <div class="obj" style="transform:translate3d(${BOT.x - 80}px,-425px,${BOT.z + 40}px) rotateY(30deg)">${two('say', 215, 96, 'translate3d(0,0,0)', '<span id="imv-t"></span>')}</div>
       <div class="obj" id="imv-bot" style="transform:translate3d(${BOT.x}px,${-14 - BOT.h / 2}px,${BOT.z}px)"><div class="bot" style="width:${BOT.w}px;height:${BOT.h}px;margin:${-BOT.h / 2}px 0 0 ${-BOT.w / 2}px"><iframe src="/mascote.html?pose=sit" title="Secreto-Bot" tabindex="-1" aria-hidden="true"></iframe></div></div>
@@ -138,7 +138,7 @@
     }, 140);
     st.timers.push(tp, ta);
     const falha = () => { if (!ov || st.ok) return; failed = true; close(true); };
-    const onmsg = e => { if (!ov || e.source !== fr.contentWindow || !e.data) return; if (e.data.rv3d === 'ok' && !st.ok) { st.ok = true; ov.classList.remove('wait'); if (st.auto && !matchMedia('(pointer:coarse)').matches) { try { iu.focus(); } catch { /* ok */ } } } else if (e.data.rv3d === 'sem') falha(); };
+    const onmsg = e => { if (!ov || e.source !== fr.contentWindow || !e.data) return; if (e.data.rv3d === 'ok' && !st.ok) { st.ok = true; ov.classList.remove('wait'); settle(); if (st.auto && !matchMedia('(pointer:coarse)').matches) { try { iu.focus(); } catch { /* ok */ } } } else if (e.data.rv3d === 'sem') falha(); };
     addEventListener('message', onmsg); st.onmsg = onmsg; st.timers.push(setTimeout(falha, 8000));
     fr.addEventListener('load', () => { post({ rv3dPose: 'sit' }); lastYaw = null; draw(); setTimeout(() => { fala('Bem-vindo(a) ao Talk.M3D em 3D! Arraste para girar.'); post({ rv3dAct: 'acena' }); }, 700); });
     fala('Bem-vindo(a) ao Talk.M3D em 3D! Arraste para girar.');
@@ -146,7 +146,7 @@
     // arrastar para girar (começa depois de 5 px, para não atrapalhar cliques), roda e pinça para aproximar
     const dist = () => { const a = [...st.pts.values()]; return a.length < 2 ? 0 : Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); };
     ov.addEventListener('pointerdown', e => {
-      if (e.target.closest('.imv-x,.imv-r,.keys button,#imv-cr,#imv-go,#imv-lg')) return;
+      if (e.target.closest('.imv-x,.imv-r,.keys button,#imv-cr,#imv-go,#imv-lg,.flb')) return;
       st.pts.set(e.pointerId, [e.clientX, e.clientY]); st.cand = { id: e.pointerId, x: e.clientX, y: e.clientY }; st.vy = 0; if (st.pts.size === 2) st.pinch = dist();
     });
     ov.addEventListener('pointermove', e => {
@@ -178,11 +178,12 @@
     draw(); xb.focus();
   }
 
+  const settle = () => { try { document.dispatchEvent(new Event('m3d:view')); } catch { /* ok */ } };
   function close(soft) {
     if (!ov) return; fechado = true; cancelAnimationFrame(st.f); st.timers.forEach(t => { clearInterval(t); clearTimeout(t); });
     removeEventListener('message', st.onmsg);
     document.removeEventListener('keydown', st.onkey, true); removeEventListener('resize', st.onres);
-    const p = st.prev; ov.remove(); ov = null; document.body.classList.remove('imv-on'); try { p && p.focus && p.focus(); } catch { /* ok */ }
+    const p = st.prev; ov.remove(); ov = null; document.body.classList.remove('imv-on'); try { p && p.focus && p.focus(); } catch { /* ok */ } settle();
   }
 
   // modo padrão = 3D; a versão normal é o plano B (sem WebGL/CSS 3D, falha ao carregar o mascote ou erro) e também uma escolha do usuário
@@ -192,9 +193,10 @@
   function auto() {
     const login = !!document.querySelector('form[data-f="login"]');
     if (!login) { fechado = false; return; }   // saiu do login: na próxima volta abre de novo
-    if (ov || fechado || failed || pref() === '2d') return;
-    if (!suporta()) { failed = true; return; }
-    try { open(true); } catch (e) { failed = true; try { close(true); } catch { /* ok */ } }
+    if (ov) return;
+    if (fechado || failed || pref() === '2d') { settle(); return; }
+    if (!suporta()) { failed = true; settle(); return; }
+    try { open(true); } catch (e) { failed = true; try { close(true); } catch { /* ok */ } settle(); }
   }
   window.imersivo = { open, close };
   const hit = e => e.target.closest && e.target.closest('.login .brand img, [data-imv]');
