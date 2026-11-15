@@ -40,7 +40,8 @@ const view = r => ({ id: r.id, status: r.status, reason: r.reason, declineReason
 const sdkPath = () => { const d = new URL('../../node_modules/agora-rtc-sdk-ng/', import.meta.url).pathname; if (!existsSync(d)) return null; const f = readdirSync(d).find(x => /^AgoraRTC_N.*\.js$/.test(x)); return f ? d + f : null; };
 export default async function (app) {
   const A = { preHandler: app.auth };
-  app.get('/vendor/agora.js', async (req, rep) => { const f = sdkPath(); if (!f) return rep.code(404).type('text/plain').send('SDK de vídeo ausente: execute npm install no servidor'); return rep.type('application/javascript').header('cache-control', 'public, max-age=86400').send(createReadStream(f)); });
+  // Só registra se o arquivo não existir em public/: o @fastify/static (wildcard:false) já cria a rota de cada arquivo e uma rota repetida derruba o servidor na partida.
+  if (!existsSync(new URL('../../public/vendor/agora.js', import.meta.url).pathname)) app.get('/vendor/agora.js', async (req, rep) => { const f = sdkPath(); if (!f) return rep.code(404).type('text/plain').send('SDK de vídeo ausente: execute npm install no servidor'); return rep.type('application/javascript').header('cache-control', 'public, max-age=86400').send(createReadStream(f)); });
   app.get('/api/calls/available', A, async req => { if (req.user.role !== 'paciente' && !HEALTH.includes(req.user.role)) return []; return available(req.user); });
   app.post('/api/calls', A, async (req, rep) => {
     const b = z.object({ targetId: uuid, reason: z.string().trim().max(200).optional() }).parse(req.body), u = req.user;
