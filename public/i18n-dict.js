@@ -2910,5 +2910,8 @@ window.I18N_DICT = {
 "Preencha o usuário e a senha para entrar.": ["Completa el usuario y la contraseña para entrar.", "", "Fill in the username and password to sign in.", "请填写用户名和密码后登录。"],
 "A tela de login não está aberta. Feche esta vista e volte ao login.": ["La pantalla de inicio de sesión no está abierta. Cierra esta vista y vuelve al inicio de sesión.", "", "The login screen isn't open. Close this view and go back to login.", "登录页面未打开。请关闭此视图并返回登录。"],
 "Entrando… cruzando os dedos!": ["Entrando… ¡cruzando los dedos!", "", "Signing in… fingers crossed!", "正在登录……祈祷顺利！"],
-"Vamos criar a sua conta!": ["¡Vamos a crear tu cuenta!", "", "Let's create your account!", "我们来创建你的账户吧！"]
+"Vamos criar a sua conta!": ["¡Vamos a crear tu cuenta!", "", "Let's create your account!", "我们来创建你的账户吧！"],
+"Arraste para girar · dê 2 cliques num campo (ou Tab) para digitar · role para aproximar · clique na logo para voltar à versão normal": ["Arrastra para girar · haz doble clic en un campo (o Tab) para escribir · desplaza para acercar · haz clic en el logo para volver a la versión normal", "", "Drag to rotate · double-click a field (or Tab) to type · scroll to zoom · click the logo to return to the normal version", "拖动旋转 · 双击输入框（或按 Tab）输入 · 滚动缩放 · 点击标志返回普通版本"],
+"Voltar à versão normal": ["Volver a la versión normal", "", "Back to the normal version", "返回普通版本"],
+"Clique para voltar à versão normal": ["Haz clic para volver a la versión normal", "", "Click to return to the normal version", "点击返回普通版本"]
 };

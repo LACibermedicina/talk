@@ -602,3 +602,7 @@ body.imv-on{overflow:hidden}
 #imv .f.hint button:hover,#imv .f.hint button:focus-visible{background:rgba(120,200,255,.25);outline:none}
 #imv .f.hint button u{color:#7fdcff;text-decoration:underline;margin-left:5px}
 #imv input{user-select:text;-webkit-user-select:text}
+#imv{transition:opacity .45s}
+#imv.wait{opacity:0;pointer-events:none}
+#imv .f.logo .lg{all:unset;pointer-events:auto;cursor:pointer;display:flex;border-radius:14px;transition:transform .2s,filter .2s}
+#imv .f.logo .lg:hover,#imv .f.logo .lg:focus-visible{transform:scale(1.1) rotate(-4deg);filter:drop-shadow(0 0 12px rgba(80,220,240,.9));outline:none}
