@@ -107,7 +107,7 @@ document.addEventListener('pointerup', rbEnd); document.addEventListener('pointe
 document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('#rbar'); if (r && !e.target.closest('button') && e.detail === 3 && ribClose) { const f = ribClose; ribClose = null; f(); } });
 addEventListener('resize', () => { const el = document.getElementById('rbar'); if (el) { if (el.classList.contains('moved')) ribClamp(el); else ribAnchor(el); } });
 /* itens móveis (posição lembrada neste navegador): ajuda, assistente, dock de funcionalidades e barra da consulta */
-const MOV = [['#helpfab', 'helpfab', null], ['#asst', 'asst', '.ash'], ['.hdock', 'dock', null], ['#cbar', 'cbar', null]];
+const MOV = [['#helpfab', 'helpfab', null], ['#asst', 'asst', '.ash'], ['.tbdock .hdock', 'dockv', null], ['.home .hdock, .dockbar .hdock', 'dock', null], ['#cbar', 'cbar', null]];
 const mvGet = k => { try { return JSON.parse(localStorage.getItem('m3d_mv_' + k) || 'null'); } catch { return null; } };
 function mvApply(el, p) { el.classList.add('mvd'); el.style.setProperty('position', 'fixed', 'important'); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none'; el.style.margin = '0'; }
 function applyMovables() { for (const [sel, k] of MOV) { const p = mvGet(k); if (!p) continue; document.querySelectorAll(sel).forEach(el => { if (el.dataset.mvk === JSON.stringify(p)) return; el.dataset.mvk = JSON.stringify(p); mvApply(el, p); const r = el.getBoundingClientRect(); if (r.right > innerWidth || r.bottom > innerHeight || r.left < 0 || r.top < 0) { el.style.left = Math.max(4, Math.min(innerWidth - r.width - 4, r.left)) + 'px'; el.style.top = Math.max(4, Math.min(innerHeight - r.height - 4, r.top)) + 'px'; } }); } }
@@ -132,8 +132,7 @@ function dashH(v) {
   };
   const menu = S.dwm ? `<div class="dmenu" role="menu"><b class="mu">Painéis</b>${G0.map(({ p, g }) => `<button role="menuitemcheckbox" aria-checked="${g.st !== 'closed'}" data-a="dpt" data-p="${p.id}"><span>${g.st === 'closed' ? '☐' : '☑'}</span> ${ES(p.t)}</button>`).join('')}<hr><button data-a="dopenall">Abrir todos</button><button data-a="dminall">Minimizar todos</button><button data-a="dreset">Reorganizar (padrão)</button></div>` : '';
   return `<div class="tb dtb"><button class="menu" data-a="menu" aria-label="Menu">☰</button><h2 style="margin:0;font-size:17px">${ES('Dashboard')} · ${ES(D.title)}</h2><span class="sp"></span><button data-a="dm" aria-haspopup="menu" aria-expanded="${!!S.dwm}">${ic(LIST, 15)} Painéis</button>${menu}<button class="xcl" data-a="closev" aria-label="Fechar janela" title="Fechar janela">✕</button></div>
-  <div class="dw ${stack ? 'stack' : ''}" id="dw" data-dv="${v}" style="--wc:${(vis.slice().sort((a, b) => ((S.dzs && S.dzs[v + b.p.id]) || 1) - ((S.dzs && S.dzs[v + a.p.id]) || 1))[0] || { p: { c: 'transparent' } }).p.c}">${vis.map(panel).join('')}${vis.length ? '' : `<div class="dwe"><p class="mu">${ES('Funcionalidade aberta sem quadros. Use os ícones da barra superior para abrir os quadros que precisar.')}</p><button class="pbtn" data-a="dopenall">Abrir todos</button></div>`}</div>
-  <div class="dockbar">${appDockH()}</div>`;
+  <div class="dw ${stack ? 'stack' : ''}" id="dw" data-dv="${v}" style="--wc:${(vis.slice().sort((a, b) => ((S.dzs && S.dzs[v + b.p.id]) || 1) - ((S.dzs && S.dzs[v + a.p.id]) || 1))[0] || { p: { c: 'transparent' } }).p.c}">${vis.map(panel).join('')}${vis.length ? '' : `<div class="dwe"><p class="mu">${ES('Funcionalidade aberta sem quadros. Use os ícones da barra superior para abrir os quadros que precisar.')}</p><button class="pbtn" data-a="dopenall">Abrir todos</button></div>`}</div>`;
 }
 Object.keys(DASH).forEach(v => { CENTER[v] = () => isDash() ? dashH(v) : (ORIG[v] ? ORIG[v]() : CENTER.tarefas0()); });
 CENTER.tarefas0 = () => bar('Tarefas e calendário') + `<div class="cv"><div class="calfull">${calBlock(true)}</div>${todayCards()}</div>`;
@@ -377,3 +376,5 @@ window.M3D_CRUMB = h => {
   });
 };
 { let wasMob = mob(); addEventListener('resize', () => { const m = mob(); if (m !== wasMob) { wasMob = m; if (S.me) render(); } }); }
+/* dois cliques no espaço vazio do dock (dentro da funcionalidade) devolvem a caixa à posição original, colada ao título */
+document.addEventListener('dblclick', e => { const d = e.target.closest && e.target.closest('.tbdock .hdock'); if (!d || e.target.closest('.happ')) return; try { localStorage.removeItem('m3d_mv_dockv'); } catch { /* ok */ } if (S.me) render(); });
