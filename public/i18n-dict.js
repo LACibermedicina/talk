@@ -2902,5 +2902,13 @@ window.I18N_DICT = {
 "Auscultando o teclado… tudo em ordem!": ["Auscultando el teclado… ¡todo en orden!", "", "Listening to the keyboard… all good!", "正在听诊键盘……一切正常！"],
 "Olá! Seja bem-vindo(a)!": ["¡Hola! ¡Bienvenido(a)!", "", "Hello! Welcome!", "你好！欢迎！"],
 "Teste de reflexo no painel. Tudo certo!": ["Prueba de reflejos en el panel. ¡Todo bien!", "", "Reflex test on the panel. All good!", "正在测试面板反射。一切正常！"],
-"Gostou da vista? Gire para ver todos os lados!": ["¿Te gusta la vista? ¡Gira para ver todos los lados!", "", "Like the view? Rotate to see every side!", "喜欢这个视角吗？旋转查看每一面！"]
+"Gostou da vista? Gire para ver todos os lados!": ["¿Te gusta la vista? ¡Gira para ver todos los lados!", "", "Like the view? Rotate to see every side!", "喜欢这个视角吗？旋转查看每一面！"],
+"Arraste para girar · dê 2 cliques num campo (ou Tab) para digitar · role para aproximar · Esc fecha": ["Arrastra para girar · haz doble clic en un campo (o Tab) para escribir · desplaza para acercar · Esc cierra", "", "Drag to rotate · double-click a field (or Tab) to type · scroll to zoom · Esc closes", "拖动旋转 · 双击输入框（或按 Tab）输入 · 滚动缩放 · Esc 关闭"],
+"Pode digitar aqui ou no teclado virtual. Eu anoto!": ["Puedes escribir aquí o en el teclado virtual. ¡Yo anoto!", "", "Type here or on the virtual keyboard. I'll take notes!", "可在此输入，或使用虚拟键盘。我来记录！"],
+"Virei o teclado para baixo: não espio a sua senha!": ["Giré el teclado hacia abajo: ¡no espío tu contraseña!", "", "I flipped the keyboard down: I'm not peeking at your password!", "我把键盘翻下去了：我不会偷看你的密码！"],
+"Pronto! Teclado de volta.": ["¡Listo! Teclado de vuelta.", "", "Done! Keyboard is back.", "好了！键盘回来了。"],
+"Preencha o usuário e a senha para entrar.": ["Completa el usuario y la contraseña para entrar.", "", "Fill in the username and password to sign in.", "请填写用户名和密码后登录。"],
+"A tela de login não está aberta. Feche esta vista e volte ao login.": ["La pantalla de inicio de sesión no está abierta. Cierra esta vista y vuelve al inicio de sesión.", "", "The login screen isn't open. Close this view and go back to login.", "登录页面未打开。请关闭此视图并返回登录。"],
+"Entrando… cruzando os dedos!": ["Entrando… ¡cruzando los dedos!", "", "Signing in… fingers crossed!", "正在登录……祈祷顺利！"],
+"Vamos criar a sua conta!": ["¡Vamos a crear tu cuenta!", "", "Let's create your account!", "我们来创建你的账户吧！"]
 };
