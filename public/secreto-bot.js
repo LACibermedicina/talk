@@ -236,6 +236,9 @@ function braco(s) {
   mesh(S(.26, 24, 16), burM, 0, -.85, 0, g); mesh(S(.09, 12, 8), burM, s * -.2, -.9, .16, g); return g;
 }
 const armL = braco(-1), armR = braco(1);
+// ponteiro: a mão direita aponta para o campo em foco (cresce da mão quando aponta)
+const ponteiroM = mat({ cor: cor(0xf6f4ee), metal: .35, brilho: .8 }), pontaM = mat({ cor: cor(0x3a6ea0), brilho: .9 });
+const ponteiro = grupo(armR, 0, -.88, .06); mesh(C(.022, .022, 1.35, 10), ponteiroM, 0, -.675, 0, ponteiro); mesh(C(0, .022, .12, 10), pontaM, 0, -1.41, 0, ponteiro);
 
 // balão (preso à mão esquerda)
 const bal = cena.add(new No());
@@ -290,7 +293,7 @@ const POSES = { sit: { y: .3, leg: -Math.PI / 2, lx: -.9, lz: -.35, rx: -.3, rz:
 let pose = Q.get('pose') === 'sit' || !Q.get('pose') ? 'sit' : 'stand', acenoFixo = Q.get('pose') === 'wave';
 const E = { ...POSES[pose], hx: 0, hy: 0, hz: 0, lean: 0, pulo: 0, danca: 0, ant: 0 };
 const mouse = { x: 0, y: 0, t: -99, px: null, py: null, escala: 0 };
-let acao = null, acaoT = 0, acaoDur = 0, proxima = reduz ? 1e9 : 2.5, olhar = [0, 0], proxOlhar = 0, ultimoOi = -99, inclina = 0;
+let apunta = null, apT = 0, acao = null, acaoT = 0, acaoDur = 0, proxima = reduz ? 1e9 : 2.5, olhar = [0, 0], proxOlhar = 0, ultimoOi = -99, inclina = 0;
 const ACOES = { acena: 2.6, pulo: .75, danca: 2.6, inclina: 1.9, levanta: 4.5, balao: 1.6, antena: 1.4, olha: 2.2 };
 function sortear(t) { const ks = Object.keys(ACOES); acao = ks[Math.random() * ks.length | 0]; acaoT = 0; acaoDur = ACOES[acao]; inclina = Math.random() < .5 ? -.32 : .32; if (acao === 'olha') olhar = [Math.random() * 1.6 - .8, Math.random() * .6 - .25]; proxima = t + acaoDur + 2 + Math.random() * 4; }
 function mouseLocal(x, y, escala) { mouse.px = x; mouse.py = y; mouse.escala = escala || Math.max(W, H) / 2; mouse.t = performance.now() / 1000; }
@@ -299,6 +302,7 @@ addEventListener('message', (e) => {
   if (alvoMsg !== '*' && e.origin !== location.origin) return; const d = e.data || {};
   if (d.rv3dPose) { pose = d.rv3dPose === 'sit' ? 'sit' : 'stand'; acenoFixo = d.rv3dPose === 'wave'; }
   if (Array.isArray(d.rv3dMouse)) mouseLocal(d.rv3dMouse[0], d.rv3dMouse[1], d.rv3dMouse[2]);
+  if ('rv3dPoint' in d) apunta = Array.isArray(d.rv3dPoint) ? { x: d.rv3dPoint[0], y: d.rv3dPoint[1] } : null;   // alvo em px dentro do quadro: a mão aponta para lá
 });
 
 let t0 = performance.now() / 1000, ultimo = t0, primeiro = true;
@@ -318,7 +322,7 @@ function quadro() {
   const pr = acao ? acaoT / acaoDur : 0;
   // alvo da pose
   const poseAlvo = POSES[acao === 'levanta' ? (pose === 'sit' ? 'stand' : 'sit') : pose], k = 1 - Math.pow(.002, dt);
-  for (const a in poseAlvo) E[a] += (poseAlvo[a] - E[a]) * k;
+  for (const a in poseAlvo) if (a !== 'rz') E[a] += (poseAlvo[a] - E[a]) * k;   // rz (braço direito) é controlado abaixo: acenar/apontar/descansar
   // olhar: mouse (se mexeu há pouco) > ação "olha" > passeio aleatório
   if (!comMouse && t > proxOlhar) { olhar = [Math.random() * .9 - .45, Math.random() * .4 - .15]; proxOlhar = t + 1.5 + Math.random() * 2.5; }
   const gx = comMouse ? mouse.x : olhar[0], gy = comMouse ? mouse.y : olhar[1], kh = 1 - Math.pow(comMouse ? .0005 : .03, dt);
@@ -338,7 +342,12 @@ function quadro() {
   const puxa = acao === 'balao' ? Math.sin(acaoT * 11) * .22 : 0;
   armL.r = [E.lx + puxa, 0, E.lz + Math.sin(t * 6.5) * .15 * E.danca];
   const acena = acenoFixo || acao === 'acena';
-  E.rz += ((acena ? 2.5 : poseAlvo.rz + Math.sin(t * 6.5 + 1) * .5 * E.danca) - E.rz) * (1 - Math.pow(.004, dt));
+  // apontar: ângulo do ombro até o alvo na tela (0 = para baixo; π/2 = reto para o lado)
+  let rzAlvo = null;
+  if (apunta && !acena && armR.W) { const so = ponto(armR.W, [0, 0, 0]), c2 = [VP[0] * so[0] + VP[4] * so[1] + VP[8] * so[2] + VP[12], VP[1] * so[0] + VP[5] * so[1] + VP[9] * so[2] + VP[13], VP[3] * so[0] + VP[7] * so[1] + VP[11] * so[2] + VP[15]];
+    const sx = (c2[0] / c2[2] * .5 + .5) * W, sy = (1 - (c2[1] / c2[2] * .5 + .5)) * H; rzAlvo = lim(Math.PI / 2 + Math.atan2(-(apunta.y - sy), apunta.x - sx), .9, 2.6); }
+  apT += ((rzAlvo !== null ? 1 : 0) - apT) * (1 - Math.pow(.003, dt)); ponteiro.s = [1, Math.max(.001, apT), 1];
+  E.rz += ((acena ? 2.5 : rzAlvo !== null ? rzAlvo : poseAlvo.rz + Math.sin(t * 6.5 + 1) * .5 * E.danca) - E.rz) * (1 - Math.pow(.004, dt));
   armR.r = [E.rx, 0, E.rz + (acena ? Math.sin(t * 8) * .32 : 0)];
   head.r = [E.hy, E.hx * .95, E.hz + Math.sin(t * .9) * .03];
   head.p = [0, 2.2 + Math.sin(t * 2) * .012, 0];

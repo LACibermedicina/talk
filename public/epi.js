@@ -15,7 +15,7 @@
     const first = !window.__epiHi; window.__epiHi = true;
     const err = S.err ? 'Ops! Confira os dados e tente de novo.' : null;
     const msg = err || (kind === 'signup' ? 'Que bom ter você por aqui! Preencha os dados para criar sua conta.' : TIPS[0]);
-    return `<div class="epiw ${first ? 'hi' : ''} ${err ? 'no' : ''}" data-epi="${kind}"><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Mascote Secreto-Bot: toque para ouvir uma dica'))}"><iframe class="epi3d" src="/mascote.html?pose=sit" title="" tabindex="-1" aria-hidden="true" loading="eager"></iframe></button><div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div></div>`;
+    return `<div class="epiw ${first ? 'hi' : ''} ${err ? 'no' : ''}" data-epi="${kind}"><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Mascote Secreto-Bot: toque para ouvir uma dica'))}"><i class="epiped" aria-hidden="true"></i><iframe class="epi3d" src="/mascote.html?pose=sit" title="" tabindex="-1" aria-hidden="true" loading="eager"></iframe></button><div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div></div>`;
   };
   const W = () => document.querySelector('.epiw');
   const FR = () => { const w = W(); return w && w.querySelector('.epi3d'); };
@@ -27,19 +27,28 @@
   const nextTip = () => { S_.i = (S_.i + 1) % TIPS.length; say(TIPS[S_.i]); };
   const mood = (c, ms) => { const w = W(); if (!w) return; w.classList.add(c); setTimeout(() => { const x = W(); if (x) x.classList.remove(c); }, ms); };
   const wave = ms => { post({ rv3dPose: 'wave' }); clearTimeout(S_.w); S_.w = setTimeout(() => post({ rv3dPose: 'sit' }), ms || 2600); };
-  const follow = e => {
-    const w = W(); if (!w || w.classList.contains('shy')) return; const p = e.touches ? e.touches[0] : e, f = FR(); if (!f) return;
-    const r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] });
-  };
-  document.addEventListener('pointermove', follow, { passive: true }); document.addEventListener('touchmove', follow, { passive: true });
-  const away = () => post({ rv3dMouse: [-500, -400, 300] });   // vira o rosto para o lado: não olha a senha
-  document.addEventListener('focusin', e => {
-    const w = W(); if (!w) return;
-    if (e.target.id === 'pw' || e.target.id === 'sp') { w.classList.add('shy'); away(); say('Pode digitar, eu não olho!'); }
-    else { w.classList.remove('shy'); if (e.target.id === 'em' || e.target.id === 'sn' || e.target.id === 'se') say('Isso! Digite seu usuário ou e-mail.'); }
-  });
-  document.addEventListener('focusout', e => { const w = W(); if (w && (e.target.id === 'pw' || e.target.id === 'sp')) { w.classList.remove('shy'); wave(1800); say('Pronto! Agora é só entrar.', 4000); } });
-  document.addEventListener('input', e => { const w = W(); if (!w || w.classList.contains('shy') || !/^(em|sn|se)$/.test(e.target.id)) return; const n = e.target.value.length, c = Math.min(1, n / 24), f = FR(), r = f ? f.getBoundingClientRect() : { width: 150, height: 190 }; post({ rv3dMouse: [r.width * (.1 + c * .8), r.height * 2.2, 150] }); });
+  const rectIn = (el, f) => { const r = el.getBoundingClientRect(), q = f.getBoundingClientRect(); return { x: r.left + Math.min(26, r.width * .2) - q.left, y: r.top + r.height / 2 - q.top, cx: r.left + Math.min(26, r.width * .2), cy: r.top + r.height / 2, r }; };
+  // aponta a mão para o elemento e faz o círculo luminoso "pulsar" nele; a cabeça também olha para lá
+  let cur = null;
+  function aim(el, say_) {
+    const w = W(), f = FR(), L = document.querySelector('.login'); if (!w || !f || !L || !el) return; cur = el;
+    const t = rectIn(el, f); post({ rv3dPoint: [t.x, t.y] }); post({ rv3dMouse: [t.x, t.y, 260] });
+    let ring = L.querySelector('.epiring'); if (!ring) { ring = document.createElement('i'); ring.className = 'epiring'; ring.setAttribute('aria-hidden', 'true'); L.append(ring); }
+    const lr = L.getBoundingClientRect(); ring.style.left = (t.cx - lr.left) + 'px'; ring.style.top = (t.cy - lr.top) + 'px'; ring.classList.remove('on'); void ring.offsetWidth; ring.classList.add('on');
+    if (say_) say(say_);
+  }
+  const follow = e => { const f = FR(); if (!f || e.target.closest && e.target.closest('.login form,.login p')) return; const p = e.touches ? e.touches[0] : e, r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] }); };
+  document.addEventListener('pointermove', follow, { passive: true });
+  const first = () => document.querySelector('.login input:not([type=hidden]):not([type=checkbox])');
+  const SAY = { em: 'Comece por aqui: seu usuário ou e-mail.', pw: 'Agora a sua senha. Eu não espio!', sn: 'Como você se chama?', se: 'Seu e-mail de acesso.', sp: 'Crie uma senha segura.' };
+  const hint = el => el.matches('input,select,textarea') ? SAY[el.id] || 'Preencha este campo.' : el.matches('button') ? 'Pronto? Clique para entrar!' : 'Ainda não tem conta? Crie a sua aqui.';
+  const home = () => { if (S.err && $('#pw')) return $('#pw'); const a = document.activeElement; return a && a.closest && a.closest('.login') && a.matches('input,select,textarea') ? a : first(); };
+  document.addEventListener('pointerover', e => { const el = e.target.closest && e.target.closest('.login input,.login select,.login textarea,.login form button,.login p a,.login [data-a=gologin]'); if (el && el !== cur) aim(el, hint(el)); });
+  document.addEventListener('focusin', e => { const el = e.target; if (el.closest && el.closest('.login') && el.matches('input,select,textarea')) aim(el, hint(el)); });
+  document.addEventListener('focusout', e => { const el = e.target; if (el.id === 'pw' || el.id === 'sp') { wave(1800); say('Pronto! Agora é só entrar.', 4000); } });
+  addEventListener('resize', () => { if (cur && document.body.contains(cur)) aim(cur); });
+  // primeira abertura: depois do aceno, aponta para o primeiro campo
+  addEventListener('message', e => { const f = FR(); if (f && e.source === f.contentWindow && (e.data || {}).rv3d === 'ok') setTimeout(() => { const a = home(); if (a) aim(a); }, 3600); });
   document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-epi-click]')) { mood('jump', 700); wave(2600); nextTip(); } });
   document.addEventListener('submit', e => { if (e.target.dataset && /^(login|signup)$/.test(e.target.dataset.f) && W()) { mood('jump', 700); wave(2600); say('Um instante, já abro para você…'); } }, true);
   setInterval(() => { const w = W(); if (w && !w.classList.contains('shy')) { w.classList.add('blink'); setTimeout(() => w.classList.remove('blink'), 160); } }, 3600);

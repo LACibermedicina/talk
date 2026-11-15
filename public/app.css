@@ -537,3 +537,38 @@ body:has(.app .rail) #langbar{display:none}
 .login>.epiw .epib:before{left:50%;top:auto;bottom:-7px;border:0;border-right:1.5px solid var(--ln);border-bottom:1.5px solid var(--ln);transform:translateX(-50%) rotate(45deg)}}
 
 .epiw.fb .epib0{display:none}
+
+/* ===== Login no estilo "mascote apresentando": fundo azul suave, cartão de vidro, mascote sentado no pedestal apontando para o campo ===== */
+body:has(.login){background:radial-gradient(1200px 700px at 15% 10%,#e7f2fa 0,transparent 60%),radial-gradient(900px 600px at 90% 90%,#a9cbe2 0,transparent 55%),linear-gradient(135deg,#d3e6f3,#b3d1e5 55%,#9fc3dc);background-attachment:fixed}
+body:has(.login)::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 70%,rgba(255,255,255,.35) 0 38px,transparent 40px),radial-gradient(circle at 20% 88%,rgba(255,255,255,.3) 0 60px,transparent 62px),radial-gradient(circle at 78% 18%,rgba(255,255,255,.28) 0 70px,transparent 72px),radial-gradient(circle at 92% 62%,rgba(255,255,255,.3) 0 46px,transparent 48px),radial-gradient(circle at 45% 8%,rgba(255,255,255,.22) 0 34px,transparent 36px);filter:blur(3px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body:has(.login){background:radial-gradient(1200px 700px at 15% 10%,#1d3a55 0,transparent 60%),linear-gradient(135deg,#0e1b29,#12263a 60%,#16314a)}:root:not([data-theme="light"]) body:has(.login)::before{opacity:.18}}
+:root[data-theme="dark"] body:has(.login){background:radial-gradient(1200px 700px at 15% 10%,#1d3a55 0,transparent 60%),linear-gradient(135deg,#0e1b29,#12263a 60%,#16314a)}:root[data-theme="dark"] body:has(.login)::before{opacity:.18}
+.login{position:relative}
+.login form{background:rgba(255,255,255,.55)!important;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);border:1.5px solid rgba(255,255,255,.7)!important;border-radius:26px!important;padding:24px!important;box-shadow:0 18px 50px rgba(40,90,130,.18),inset 0 1px 0 rgba(255,255,255,.8)}
+.login form input{background:rgba(255,255,255,.55)!important;border-radius:14px!important;border:1.5px solid rgba(120,160,190,.35)!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .login form{background:rgba(23,33,43,.6)!important;border-color:rgba(120,160,200,.25)!important}:root:not([data-theme="light"]) .login form input{background:rgba(10,20,30,.45)!important}}
+:root[data-theme="dark"] .login form{background:rgba(23,33,43,.6)!important;border-color:rgba(120,160,200,.25)!important}:root[data-theme="dark"] .login form input{background:rgba(10,20,30,.45)!important}
+/* aro luminoso no campo apontado */
+.epiring{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid rgba(255,255,255,.95);box-shadow:0 0 0 4px rgba(75,171,157,.3),0 0 16px 4px rgba(120,210,255,.7);pointer-events:none;opacity:0;z-index:7}
+.epiring.on{opacity:1;animation:epir 1.6s ease-out infinite}@keyframes epir{0%{transform:scale(.5);opacity:1}70%{transform:scale(1.7);opacity:.15}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){.epiring.on{animation:none;opacity:.9}}
+.epiped{display:none}
+@media (min-width:760px){
+.login{grid-template-columns:330px 400px!important;column-gap:0!important}
+.login>.epiw{align-self:end!important;align-items:flex-start!important;gap:8px!important;position:relative;z-index:6}
+.login>.epiw .epib0{width:330px!important;height:420px!important;overflow:visible}
+.login>.epiw .epi3d{position:absolute;left:-55px;bottom:0;width:440px;height:420px;z-index:2}
+.login>.epiw .epiped{display:block;position:absolute;left:-20px;bottom:-34px;width:380px;height:92px;border-radius:30px 30px 0 0;background:linear-gradient(#cfe3f1,#a6c4d9 40%,#8fb0c8);box-shadow:0 -2px 0 rgba(255,255,255,.7) inset,0 20px 40px rgba(40,90,130,.25);z-index:1}
+.login>.epiw .epib{align-self:flex-start;width:300px;text-align:left;background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.login>.epiw .epib:before{left:60px;transform:translateX(-50%) rotate(45deg);background:rgba(255,255,255,.85)}
+.login>*:not(.epiw){grid-column:2}.login>.epiw{grid-column:1}}
+
+.login>.epiring{grid-column:1/-1!important;grid-row:1/-1}
+
+@media (min-width:760px){
+.login{grid-template-columns:300px 400px!important}
+.login>.epiw{align-self:center!important}
+.login>.epiw .epib0{width:300px!important}
+.login>.epiw .epi3d{left:-70px!important}
+.login>.epiw .epiped{left:-25px!important;width:350px!important}
+.login>.epiw .epib{width:280px!important}}
