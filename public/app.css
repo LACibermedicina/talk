@@ -500,3 +500,21 @@ body:has(.app .rail) #langbar{display:none}
 .tci{width:52px;height:52px;border-radius:50%;background:#1a9bb0;color:#fff;display:grid;place-items:center;animation:tcp 1.2s infinite}@keyframes tcp{50%{transform:scale(1.1);box-shadow:0 0 0 10px rgba(26,155,176,.2)}}
 .tcr{display:flex;gap:8px;margin-top:12px}.tcr button{flex:1}.tcr .dng{background:#d9473b;color:#fff;border-color:#d9473b}
 .tcrow{align-items:center;gap:8px}.tcrow .tcn{flex:1;min-width:0}.tcw{margin:6px 0}
+
+/* Epi — mascote da tela de entrada */
+.login{margin:max(12px,4vh) auto!important}
+.epiw{display:flex;align-items:center;gap:6px;margin:0 0 6px}.epib0{all:unset;cursor:pointer;flex:0 0 138px;display:block;border-radius:16px}.epib0:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.epi{width:138px;height:auto;display:block;overflow:visible;--px:0px;--py:0px}.epi .pup{transform:translate(var(--px),var(--py));transition:transform .09s ease-out}
+.epi .lid{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(0);transition:transform .07s}.epiw.blink .lid{transform:scaleY(1)}
+.epi .armR{transform-origin:160px 128px;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}.epi .armL,.epi .head,.epi .body{transform-box:view-box}
+.epiw.shy .armR{transform:rotate(95deg)}.epiw.shy .pup{opacity:0}
+.epi .ant{animation:epia 2s ease-in-out infinite}@keyframes epia{50%{fill:#7ee0d0}}
+.epib{position:relative;flex:1;background:var(--sf);color:var(--ink);border:1.5px solid var(--ln);border-radius:14px;padding:9px 12px;font-size:13.5px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.epib:before{content:"";position:absolute;left:-7px;top:50%;width:12px;height:12px;background:var(--sf);border-left:1.5px solid var(--ln);border-bottom:1.5px solid var(--ln);transform:translateY(-50%) rotate(45deg)}
+@media (prefers-reduced-motion:no-preference){
+.epiw.hi .armR{animation:epiw 1.1s ease-in-out 2 .3s}@keyframes epiw{0%,100%{transform:rotate(-150deg)}50%{transform:rotate(-172deg)}}
+.epiw.no .head,.epiw.no .body{animation:epin .5s ease-in-out 2}@keyframes epin{25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
+.epiw.jump .epi{animation:epij .6s cubic-bezier(.3,1.6,.5,1)}@keyframes epij{40%{transform:translateY(-14px)}}
+.epi{animation:epif 4s ease-in-out infinite}@keyframes epif{50%{transform:translateY(-3px)}}}
+@media (prefers-reduced-motion:reduce){.epi,.epi *{animation:none!important;transition:none!important}}
+@media (max-width:380px){.epib0{flex-basis:108px}.epi{width:108px}.epib{font-size:12.5px}}
