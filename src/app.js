@@ -17,7 +17,7 @@ import { seedTest, testOn, TEST_USERS } from './testMode.js';
 for (const k of ['DATABASE_URL', 'JWT_SECRET', 'DATA_KEY', 'APP_ORIGIN']) if (!process.env[k]) throw new Error('Falta variável ' + k);
 if (process.env.JWT_SECRET.length < 32) throw new Error('JWT_SECRET muito curto');
 const app = Fastify({ logger: { redact: ['req.headers.cookie', 'req.headers.authorization'] }, trustProxy: true, bodyLimit: 1e6 });
-await app.register(helmet, { contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ['https://fonts.gstatic.com'], imgSrc: ["'self'", 'data:', 'blob:'], mediaSrc: ["'self'", 'blob:'], connectSrc: ["'self'", 'https:', 'wss:'], workerSrc: ["'self'", 'blob:'], objectSrc: ["'none'"], frameSrc: ["'none'"], baseUri: ["'self'"], formAction: ["'self'"], frameAncestors: ["'none'"] } } });
+await app.register(helmet, { contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ['https://fonts.gstatic.com'], imgSrc: ["'self'", 'data:', 'blob:'], mediaSrc: ["'self'", 'blob:'], connectSrc: ["'self'", 'https:', 'wss:'], workerSrc: ["'self'", 'blob:'], objectSrc: ["'none'"], frameSrc: ["'self'"], baseUri: ["'self'"], formAction: ["'self'"], frameAncestors: ["'self'"] } } });
 await app.register(cookie);
 await app.register(jwt, { secret: process.env.JWT_SECRET, cookie: { cookieName: 't', signed: false } });
 await app.register(rate, { max: 300, timeWindow: '1 minute' });

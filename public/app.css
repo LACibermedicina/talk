@@ -535,3 +535,5 @@ body:has(.app .rail) #langbar{display:none}
 .login>.epiw.fb .epib0{height:auto!important}.login>.epiw.fb .epi{width:220px}
 .login>.epiw .epib{flex:0 0 auto;width:100%;text-align:center;font-size:14px}
 .login>.epiw .epib:before{left:50%;top:auto;bottom:-7px;border:0;border-right:1.5px solid var(--ln);border-bottom:1.5px solid var(--ln);transform:translateX(-50%) rotate(45deg)}}
+
+.epiw.fb .epib0{display:none}
