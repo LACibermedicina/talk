@@ -512,7 +512,7 @@ body:has(.login)::before{content:"";position:fixed;inset:0;pointer-events:none;b
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .login form{background:rgba(23,33,43,.6)!important;border-color:rgba(120,160,200,.25)!important}:root:not([data-theme="light"]) .login form input{background:rgba(10,20,30,.45)!important}}
 :root[data-theme="dark"] .login form{background:rgba(23,33,43,.6)!important;border-color:rgba(120,160,200,.25)!important}:root[data-theme="dark"] .login form input{background:rgba(10,20,30,.45)!important}
 /* balão de fala: ocupa o lugar do título (acima do cartão) */
-.epib{position:relative;margin:0 0 74px;display:flex;align-items:center;min-height:58px;box-sizing:border-box;background:rgba(255,255,255,.78);color:var(--ink);border:1.5px solid rgba(255,255,255,.9);border-radius:16px;padding:10px 14px;font-size:14px;line-height:1.35;box-shadow:0 6px 18px rgba(40,90,130,.15);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);min-height:20px}
+.epib{position:relative;margin:0 0 74px;display:flex;align-items:center;min-height:58px;box-sizing:border-box;background:rgba(255,255,255,.78);color:var(--ink);border:1.5px solid rgba(255,255,255,.9);border-radius:16px;padding:10px 14px;font-size:14px;line-height:1.35;box-shadow:0 6px 18px rgba(40,90,130,.15);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .epib:before{content:"";position:absolute;left:46px;bottom:-8px;width:14px;height:14px;background:rgba(255,255,255,.9);border-right:1.5px solid rgba(255,255,255,.9);border-bottom:1.5px solid rgba(255,255,255,.9);transform:rotate(45deg)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .epib,:root:not([data-theme="light"]) .epib:before{background:rgba(23,33,43,.85);border-color:rgba(120,160,200,.3)}}
 :root[data-theme="dark"] .epib,:root[data-theme="dark"] .epib:before{background:rgba(23,33,43,.85);border-color:rgba(120,160,200,.3)}
@@ -526,9 +526,10 @@ body:has(.login)::before{content:"";position:fixed;inset:0;pointer-events:none;b
 .epiring.on{opacity:1;animation:epir 1.6s ease-out infinite}@keyframes epir{0%{transform:scale(.5);opacity:1}70%{transform:scale(1.7);opacity:.15}100%{transform:scale(1.9);opacity:0}}
 @media (prefers-reduced-motion:reduce){.epiring.on{animation:none;opacity:.9}}
 .login.shake form{animation:epis .45s}@keyframes epis{20%{transform:translateX(-7px)}50%{transform:translateX(6px)}80%{transform:translateX(-3px)}}
-/* telas largas: balão e cartão numa coluna, título ao lado (na horizontal) */
-@media (min-width:760px){
-.login{max-width:none!important;width:max-content;display:grid;grid-template-columns:400px auto;column-gap:44px;align-items:start}
-.login>.epib{grid-column:1;grid-row:1}.login>form{grid-column:1;grid-row:2}.login>p,.login>div:not(.brand){grid-column:1}
-.login>.brand{grid-column:2;grid-row:2;align-self:center;font-size:34px!important;padding:0}.login>.brand img{width:64px!important}}
-@media (max-width:759px){.login{display:flex;flex-direction:column}.login>.brand{order:9;justify-content:center;margin-top:10px}.login>.epib{order:-2}.login>form{order:-1}}
+/* uma coluna só: logomarca em cima do cartão, o balão de fala por cima dela; mascote com bastante céu para subir no balão */
+.login{max-width:420px!important;width:100%;display:grid;grid-template-columns:minmax(0,1fr);align-items:start;margin:max(150px,15vh) auto 40px!important;padding:0 16px;box-sizing:border-box}
+.login>.brand{grid-row:1;grid-column:1;justify-self:start;align-self:start;font-size:36px!important;padding:0 6px;margin:0;z-index:1}.login>.brand img{width:64px!important}
+.login>.epib{grid-row:1;grid-column:1;justify-self:end;align-self:start;width:80%;margin:48px 0 0;box-sizing:border-box;z-index:3}
+.login>form{grid-row:2;grid-column:1;margin-top:50px}.login>p,.login>div:not(.brand):not(.epib){grid-column:1}
+.login form>button:last-of-type{margin-top:34px}
+.epib0{pointer-events:none}.epiw.top .epib0{pointer-events:auto}

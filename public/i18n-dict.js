@@ -2881,5 +2881,12 @@ window.I18N_DICT = {
 "Um instante, já abro para você…": ["Un momento, ya le abro…", "", "One moment, opening up for you…", "请稍等，马上为您打开…"],
 "Mascote Secreto-Bot: toque para ouvir uma dica": ["Mascota Secreto-Bot: toque para oír un consejo", "", "Secreto-Bot mascot: tap for a tip", "吉祥物 Secreto-Bot：点击听提示"],
 "Nenhuma movimentação ainda.": ["Aún no hay movimientos.", "", "No transactions yet.", "暂无交易。"],
-"Quanto custa cada recurso": ["Cuánto cuesta cada recurso", "", "What each feature costs", "各功能费用"]
+"Quanto custa cada recurso": ["Cuánto cuesta cada recurso", "", "What each feature costs", "各功能费用"],
+"Auscultando o campo da senha… batimentos normais!": ["Auscultando el campo de contraseña… ¡latidos normales!", "", "Listening to the password field… heartbeat normal!", "正在听诊密码框……心跳正常！"],
+"Teste de reflexo no campo de usuário. Tudo certo!": ["Prueba de reflejos en el campo de usuario. ¡Todo bien!", "", "Reflex test on the username field. All good!", "正在测试用户名框的反射。一切正常！"],
+"Medindo a temperatura da conversa: 36,5 °C. Ótimo!": ["Midiendo la temperatura de la conversación: 36,5 °C. ¡Excelente!", "", "Taking the conversation's temperature: 36.5 °C. Great!", "正在测量对话体温：36.5 °C。很好！"],
+"Deixa eu iluminar a nossa logomarca!": ["¡Déjame iluminar nuestro logotipo!", "", "Let me light up our logo!", "让我照亮我们的标志！"],
+"Começa por aqui, ó! Estou de olho no teu campo.": ["¡Empieza por aquí! Estoy vigilando tu campo.", "", "Start right here! I'm keeping an eye on your field.", "从这里开始！我在盯着你的输入框。"],
+"Febre de senha esquecida? Peça ao administrador!": ["¿Fiebre de contraseña olvidada? ¡Pide ayuda al administrador!", "", "Forgotten-password fever? Ask the administrator!", "忘记密码发烧了？请联系管理员！"],
+"Sabia que o balão também é meu trampolim?": ["¿Sabías que el globo también es mi trampolín?", "", "Did you know the bubble is also my trampoline?", "你知道气泡也是我的蹦床吗？"]
 };

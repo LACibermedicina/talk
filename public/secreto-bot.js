@@ -238,7 +238,19 @@ function braco(s) {
 const armL = braco(-1), armR = braco(1);
 // ponteiro: a mão direita aponta para o campo em foco (cresce da mão quando aponta)
 const ponteiroM = mat({ cor: cor(0xf6f4ee), metal: .35, brilho: .8 }), pontaM = mat({ cor: cor(0x3a6ea0), brilho: .9 });
-const ponteiro = grupo(armR, 0, -.88, .06); mesh(C(.022, .022, 1.35, 10), ponteiroM, 0, -.675, 0, ponteiro); mesh(C(0, .022, .12, 10), pontaM, 0, -1.41, 0, ponteiro);
+// itens de médico que ele pega na mão direita (crescem a partir da mão): caneta/ponteiro, estetoscópio, termômetro, martelo de reflexo, lanterna
+const props = [], maoItem = (nome) => { const g = grupo(armR, 0, -.88, .06); g.s = [.001, .001, .001]; props.push({ nome, g, k: 0 }); return g; };
+const prata = mat({ cor: cor(0xc9ced6), metal: 1, brilho: .8 }), escuroM = mat({ cor: cor(0x2b2a36), brilho: .4 }), vermelhoM = mat({ cor: cor(0xd0443a), brilho: .6 }), vidroM = mat({ cor: cor(0xf2f5f7), brilho: .9 }), luzM = mat({ cor: cor(0xfff3a0), semLuz: 1 });
+const ponteiro = maoItem('caneta'); mesh(C(.022, .022, 1.35, 10), ponteiroM, 0, -.675, 0, ponteiro); mesh(C(0, .022, .12, 10), pontaM, 0, -1.41, 0, ponteiro);
+const est = maoItem('estet'); mesh(C(.018, .018, .55, 8), escuroM, 0, -.28, 0, est); mesh(C(.15, .15, .05, 20), prata, 0, -.6, 0, est); mesh(C(.08, .1, .07, 16), prata, 0, -.54, 0, est);
+const termo = maoItem('termo'); mesh(C(.02, .02, .8, 10), vidroM, 0, -.4, 0, termo); mesh(C(.008, .008, .5, 6), vermelhoM, 0, -.5, .02, termo); mesh(S(.04, 10, 8), vermelhoM, 0, -.82, 0, termo); mesh(C(.03, .03, .1, 10), prata, 0, -.02, 0, termo);
+const mart = maoItem('martelo'); mesh(C(.02, .02, .75, 10), escuroM, 0, -.38, 0, mart); mesh(B(.24, .12, .1), mat({ cor: cor(0x7a2a24), brilho: .3 }), 0, -.8, 0, mart);
+const lant = maoItem('lanterna'); mesh(C(.035, .035, .55, 12), prata, 0, -.28, 0, lant); mesh(S(.05, 10, 8), luzM, 0, -.58, 0, lant);
+mesh(C(.02, .26, .9, 18), mat({ cor: cor(0xfff3b0), semLuz: 1, alfa: .2 }), 0, -1.05, 0, lant).transp = true;
+// estetoscópio no pescoço (aparece junto com o da mão)
+const estN = grupo(corpo, 0, 1.12, .47); estN.s = [.001, .001, .001]; props.push({ nome: 'estet', g: estN, k: 0 });
+mesh(Tr(.3, .03, 8, 28), escuroM, 0, 0, 0, estN); mesh(C(.09, .09, .035, 18), prata, 0, -.32, .02, estN).r = [Math.PI / 2, 0, 0];
+[-1, 1].forEach((x) => mesh(S(.04, 8, 8), prata, x * .27, .13, 0, estN));
 
 // balão (preso à mão esquerda)
 const bal = cena.add(new No());
@@ -294,7 +306,8 @@ let pose = Q.get('pose') === 'sit' || !Q.get('pose') ? 'sit' : 'stand', acenoFix
 const E = { ...POSES[pose], hx: 0, hy: 0, hz: 0, lean: 0, pulo: 0, danca: 0, ant: 0 };
 const mouse = { x: 0, y: 0, t: -99, px: null, py: null, escala: 0 };
 let apunta = null, apT = 0, acao = null, acaoT = 0, acaoDur = 0, proxima = reduz ? 1e9 : 2.5, olhar = [0, 0], proxOlhar = 0, ultimoOi = -99, inclina = 0;
-const ACOES = { acena: 2.6, pulo: .75, danca: 2.6, inclina: 1.9, levanta: 4.5, balao: 1.6, antena: 1.4, olha: 2.2 };
+const ACOES = { acena: 2.6, pulo: .75, danca: 2.6, inclina: 1.9, levanta: 4.5, balao: 1.6, antena: 1.4, olha: 2.2, estetoscopio: 3.4, termometro: 2.8, martelo: 2.6, lanterna: 2.6 };
+const ITEM = { estetoscopio: 'estet', termometro: 'termo', martelo: 'martelo', lanterna: 'lanterna' };
 function sortear(t) { const ks = Object.keys(ACOES); acao = ks[Math.random() * ks.length | 0]; acaoT = 0; acaoDur = ACOES[acao]; inclina = Math.random() < .5 ? -.32 : .32; if (acao === 'olha') olhar = [Math.random() * 1.6 - .8, Math.random() * .6 - .25]; proxima = t + acaoDur + 2 + Math.random() * 4; }
 function mouseLocal(x, y, escala) { mouse.px = x; mouse.py = y; mouse.escala = escala || Math.max(W, H) / 2; mouse.t = performance.now() / 1000; }
 addEventListener('pointermove', (e) => mouseLocal(e.clientX, e.clientY, Math.max(innerWidth, innerHeight) / 2));
@@ -328,7 +341,8 @@ function quadro() {
   if (!comMouse && t > proxOlhar) { olhar = [Math.random() * .9 - .45, Math.random() * .4 - .15]; proxOlhar = t + 1.5 + Math.random() * 2.5; }
   const gx = comMouse ? mouse.x : olhar[0], gy = comMouse ? mouse.y : olhar[1], kh = 1 - Math.pow(comMouse ? .0005 : .03, dt);
   E.hx += (lim(gx * 1.1, -.62, .62) - E.hx) * kh; E.hy += (lim(gy * .9, -.35, .45) - E.hy) * kh;
-  E.hz += ((acao === 'inclina' ? inclina : 0) - E.hz) * (1 - Math.pow(.01, dt));
+  const itm = ITEM[acao] || (apunta ? 'caneta' : '');
+  E.hz += (((acao === 'inclina' ? inclina : 0) + (itm === 'estet' ? .16 : itm === 'termo' ? -.12 : 0)) - E.hz) * (1 - Math.pow(.01, dt));
   E.lean += (E.hx * .28 - E.lean) * (1 - Math.pow(.05, dt));
   E.danca += ((acao === 'danca' ? 1 : 0) - E.danca) * (1 - Math.pow(.02, dt));
   E.ant = Math.max(E.ant * Math.pow(.15, dt), acao === 'antena' ? 1 : 0, comMouse ? Math.min(1, Math.hypot(mouse.x, mouse.y) < .3 ? .5 : 0) : 0);
@@ -346,10 +360,17 @@ function quadro() {
   // apontar: ângulo do ombro até o alvo na tela (0 = para baixo; π/2 = reto para o lado)
   let rzAlvo = null;
   if (apunta && !acena && armR.W) { const so = ponto(armR.W, [0, 0, 0]), c2 = [VP[0] * so[0] + VP[4] * so[1] + VP[8] * so[2] + VP[12], VP[1] * so[0] + VP[5] * so[1] + VP[9] * so[2] + VP[13], VP[3] * so[0] + VP[7] * so[1] + VP[11] * so[2] + VP[15]];
-    const sx = (c2[0] / c2[2] * .5 + .5) * W, sy = (1 - (c2[1] / c2[2] * .5 + .5)) * H; rzAlvo = lim(Math.PI / 2 + Math.atan2(-(apunta.y - sy), apunta.x - sx), .9, 2.6); }
-  apT += ((rzAlvo !== null ? 1 : 0) - apT) * (1 - Math.pow(.003, dt)); ponteiro.s = [1, Math.max(.001, apT), 1];
+    const sx = (c2[0] / c2[2] * .5 + .5) * W, sy = (1 - (c2[1] / c2[2] * .5 + .5)) * H; rzAlvo = lim(Math.PI / 2 + Math.atan2(-(apunta.y - sy), apunta.x - sx), ITEM[acao] ? .25 : .9, 2.6); }
+  // cada item tem seu gesto: auscultar, medir, bater o martelo, iluminar
+  let rxOff = 0, rzOv = null;
+  if (itm === 'estet' && !apunta) { rzOv = -.75; rxOff = -.9; }
+  if (itm === 'termo') { rzOv = 2.2 + Math.sin(acaoT * 12) * .04; rxOff = -.15; }
+  if (itm === 'martelo') { rxOff = Math.sin(acaoT * 11) * .45 - .2; if (!apunta) rzOv = 1.5; }
+  if (itm === 'lanterna' && !apunta) rzOv = 1.8;
+  if (rzOv !== null && !acenoFixo && acao !== 'acena') rzAlvo = rzOv;
+  props.forEach((o) => { o.k += ((itm === o.nome ? 1 : 0) - o.k) * (1 - Math.pow(.001, dt)); const v = Math.max(.001, o.k) * 1.4; o.g.s = [v, v, v]; });
   E.rz += ((acena ? 2.5 : rzAlvo !== null ? rzAlvo : poseAlvo.rz + Math.sin(t * 6.5 + 1) * .5 * E.danca) - E.rz) * (1 - Math.pow(.004, dt));
-  armR.r = [E.rx, 0, E.rz + (acena ? Math.sin(t * 8) * .32 : 0)];
+  armR.r = [E.rx + rxOff, 0, E.rz + (acena ? Math.sin(t * 8) * .32 : 0)];
   head.r = [E.hy, E.hx * .95, E.hz + Math.sin(t * .9) * .03];
   head.p = [0, 2.2 + Math.sin(t * 2) * .012, 0];
   olhoG.r = [E.hy * .35, E.hx * .35, 0];
@@ -361,7 +382,7 @@ function quadro() {
   const quica = acao === 'balao' ? 1 + Math.abs(Math.sin(acaoT * 11)) * .06 : 1; balloon.s = [.85 * quica, 1.1 * quica, .85 * quica];
   const chao = -.26 * (E.y - .3) / .68; sombra.p = [0, chao + .01, .15]; const sm = 1 - pulo * .35; sombra.s = [2.8 * sm, 2 * sm, 1]; sombra.m.alfa = 1 - pulo * .5;
   atualiza(cena, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
-  ecg(dt);
+  ecg(dt * (itm === 'estet' ? 2.4 : 1));
   // desenha
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.uniformMatrix4fv(U.uVP, false, VP); gl.uniform3fv(U.uCam, cam);

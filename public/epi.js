@@ -31,9 +31,9 @@
   const btn = () => document.querySelector('.login form>button:last-of-type');
   const fields = () => [...document.querySelectorAll('.login form input:not([type=hidden]):not([type=checkbox]),.login form select')];
   // onde o mascote pousa: em cima do botão (lado direito) ou na borda de cima do campo
-  const spot = el => { const l = L(), r = el.getBoundingClientRect(), q = l.getBoundingClientRect(); return { x: r.left - q.left + r.width * .78 - BOT_CX, y: r.top - q.top - FEET + 2 }; };
+  const spot = el => { const l = L(), r = el.getBoundingClientRect(), q = l.getBoundingClientRect(); return { x: r.left - q.left + r.width * (el.id === 'epit' ? .84 : .78) - BOT_CX, y: r.top - q.top - FEET + 2 }; };
   const put = (el, hop) => {
-    const w = W(), l = L(); if (!w || !l || !el) return; const t = spot(el), cur = w.__pos || t; w.__pos = t; S_.at = el;
+    const w = W(), l = L(); if (!w || !l || !el) return; const t = spot(el), cur = w.__pos || t; w.__pos = t; S_.at = el; w.classList.toggle('top', el.id === 'epit');
     const f = p => `translate(${p.x}px,${p.y}px)`;
     if (hop && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
       post({ rv3dAct: 'pulo' }); w.style.transform = f(t);
@@ -50,9 +50,26 @@
   const noAim = () => post({ rv3dPoint: null });
   const SAY = { em: 'Comece por aqui: seu usuário ou e-mail.', pw: 'Agora a sua senha. Eu não espio!', sn: 'Como você se chama?', se: 'Seu e-mail de acesso.', sp: 'Crie uma senha segura.' };
   const hint = el => el.matches('input,select,textarea') ? SAY[el.id] || 'Preencha este campo.' : el.matches('button') ? 'Pronto? Clique para entrar!' : 'Ainda não tem conta? Crie a sua aqui.';
-  function goto(el, talk) { if (!el) return; noAim(); if (el !== S_.at) put(el, true); if (talk !== false) say(hint(el)); ring(el); }
-  // "brincadeira": quando ninguém mexe, ele passeia pelos campos e volta para o botão
-  function idle() { clearInterval(S_.idle); S_.idle = setInterval(() => { const a = document.activeElement; if (!W() || (a && a.matches && a.matches('.login input,.login select'))) return; const seq = [...fields(), btn()].filter(Boolean), i = seq.indexOf(S_.at); const nx = seq[(i + 1) % seq.length]; goto(nx, false); if (Math.random() < .5) wave(1800); }, 7000); }
+  function goto(el, talk) { if (!el) return; noAim(); if (el !== S_.at) put(el, true); if (talk !== false) say(hint(el)); if (el.id !== 'epit') ring(el); }
+  // itens de médico: aponta a mão para o alvo, pede o gesto ao 3D e reage na tela (campo cede, balão responde)
+  const bub = () => document.getElementById('epit'), logo = () => document.querySelector('.login>.brand');
+  const act = (nome, el, texto, bate) => { if (el) aim(el); post({ rv3dAct: nome }); if (texto) say(texto);
+    (bate || []).forEach(ms => setTimeout(() => { const x = el || bub(); if (x) squish(x); }, ms));
+    clearTimeout(S_.noaim); S_.noaim = setTimeout(noAim, 2900); };
+  const wait = (fn, ms) => setTimeout(() => { const a = document.activeElement; if (W() && !(a && a.matches && a.matches('.login input,.login select'))) fn(); }, ms);
+  const PLAYS = [
+    () => { const f = fields(), pw = f[f.length - 1]; goto(btn(), false); wait(() => act('estetoscopio', pw, 'Auscultando o campo da senha… batimentos normais!', [900, 1500, 2100]), 900); },
+    () => { const u = fields()[0]; goto(u, false); wait(() => act('martelo', u, 'Teste de reflexo no campo de usuário. Tudo certo!', [600, 1150, 1700]), 900); },
+    () => { goto(bub(), false); wait(() => act('termometro', null, 'Medindo a temperatura da conversa: 36,5 °C. Ótimo!'), 900); },
+    () => { goto(bub(), false); wait(() => act('lanterna', logo(), 'Deixa eu iluminar a nossa logomarca!'), 900); },
+    () => { goto(bub(), false); wait(() => { aim(fields()[0]); say('Começa por aqui, ó! Estou de olho no teu campo.'); S_.noaim = setTimeout(noAim, 2800); }, 900); },
+    () => { goto(btn(), false); wait(() => act('termometro', null, 'Febre de senha esquecida? Peça ao administrador!'), 900); },
+    () => { goto(bub(), false); wait(() => { squish(bub()); post({ rv3dAct: 'balao' }); say('Sabia que o balão também é meu trampolim?'); }, 900); }
+  ];
+  window.epiPlay = n => PLAYS[n]();   // (para testes/demonstração)
+  function play() { let n; do { n = (Math.random() * PLAYS.length) | 0; } while (n === S_.last && PLAYS.length > 1); S_.last = n; PLAYS[n](); }
+  // "brincadeira": quando ninguém mexe, ele escolhe uma das atividades acima a cada poucos segundos
+  function idle() { clearInterval(S_.idle); S_.idle = setInterval(() => { const a = document.activeElement; if (!W() || (a && a.matches && a.matches('.login input,.login select'))) return; play(); }, 9000); }
   function start() {
     const w = W(), b = btn(); if (!w || !b || w.__init) return; w.__init = true; put(b, false); idle();
     if (S.err) { const l = L(); l.classList.add('shake'); setTimeout(() => l.classList.remove('shake'), 500); const p = $('#pw'); if (p) setTimeout(() => goto(p), 600); }
@@ -61,7 +78,7 @@
   document.addEventListener('focusin', e => { const el = e.target; if (el.closest && el.closest('.login') && el.matches('input,select')) goto(el); });
   document.addEventListener('focusout', e => { const el = e.target; if (el.id === 'pw' || el.id === 'sp') { wave(1800); say('Pronto! Agora é só entrar.', 4000); setTimeout(() => { const a = document.activeElement; if (!(a && a.matches && a.matches('.login input,.login select'))) goto(btn(), false); }, 1500); } });
   document.addEventListener('input', e => { if (e.target.closest && e.target.closest('.login')) { const f = FR(); try { f.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-7px)' }, { transform: 'translateY(0)' }], { duration: 180 }); } catch { /* sem animação */ } } });
-  document.addEventListener('pointerover', e => { const el = e.target.closest && e.target.closest('.login form>button:last-of-type,.login p a,.login [data-a=gologin]'); if (!el) return;
+  document.addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('.epib') && S_.at !== bub()) { goto(bub(), false); return; } const el = e.target.closest && e.target.closest('.login form>button:last-of-type,.login p a,.login [data-a=gologin]'); if (!el) return;
     if (el.matches('form>button')) goto(el); else { if (S_.at !== btn()) put(btn(), true); aim(el); say(hint(el)); } });
   const follow = e => { const f = FR(); if (!f || e.target.closest && e.target.closest('.login form,.login p')) return; const p = e.touches ? e.touches[0] : e, r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] }); };
   document.addEventListener('pointermove', follow, { passive: true });
