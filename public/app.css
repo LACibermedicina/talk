@@ -644,3 +644,4 @@ body:has(.flagrow) #langbar{display:none}
 #rbar.att::before{content:"";position:absolute;top:-1px;left:50%;width:26px;height:3px;margin-left:-13px;border-radius:0 0 3px 3px;background:var(--ln)}
 #rbar.att .rt{top:calc(100% + 8px);bottom:auto}
 body.rbatt #app .chat>.dw{margin-top:36px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tch{margin:12px 0 4px;font-size:13px;opacity:.75}

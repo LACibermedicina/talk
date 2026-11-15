@@ -4,14 +4,22 @@ import { q, pool } from '../db.js';
 import { audit } from '../audit.js';
 import { HEALTH } from '../roles.js';
 import { statusOf, touch } from '../presence.js';
+import { notify } from '../followup.js';
+import { proPair, classify, settlementFor } from '../teamLogic.js';
 import { CALL_WINDOW_MIN, RING_SECONDS, pairOk, declineText, callInfo, apptStatusFor, NO_ANSWER } from '../callLogic.js';
 const uuid = z.string().uuid();
 const W = `${CALL_WINDOW_MIN} minutes`;
 // Disponível = estado "online" (não trocou para ocupado/offline) + sem consulta na agenda na janela da chamada + sem outra chamada tocando.
+const teamOf = async id => ((await q('select team_id from team_members where user_id=$1', [id]))[0] || {}).team_id || null;
 async function available(u) {
-  const rows = u.role === 'paciente'
-    ? await q(`select id,name,role,cargo from users where active and not pending and role=any($1) and id<>$2 order by name`, [HEALTH, u.sub])
-    : await q(`select x.id,x.name,x.role,x.cargo from users x join care_team c on c.patient_id=x.id where c.professional_id=$1 and x.active and not x.pending and x.role='paciente' order by x.name`, [u.sub]);
+  let rows;
+  if (u.role === 'paciente') rows = await q(`select id,name,role,cargo from users where active and not pending and role=any($1) and id<>$2 order by name`, [HEALTH, u.sub]);
+  else {
+    const pats = await q(`select x.id,x.name,x.role,x.cargo from users x join care_team c on c.patient_id=x.id where c.professional_id=$1 and x.active and not x.pending and x.role='paciente' order by x.name`, [u.sub]);
+    const me = await teamOf(u.sub);
+    const pros = await q(`select x.id,x.name,x.role,x.cargo,tm.team_id,t.name team_name from users x left join team_members tm on tm.user_id=x.id left join teams t on t.id=tm.team_id where x.active and not x.pending and x.role=any($1) and x.id<>$2 order by x.name`, [HEALTH, u.sub]);
+    rows = [...pats.map(r => ({ ...r, grp: 'paciente' })), ...pros.map(r => ({ id: r.id, name: r.name, role: r.role, cargo: r.cargo, grp: me && r.team_id === me ? 'equipe' : 'externo', team: r.team_name || null }))];
+  }
   const on = rows.filter(r => statusOf(r.id) === 'online'); if (!on.length) return [];
   const ids = on.map(r => r.id);
   const busy = new Set([
@@ -26,11 +34,21 @@ async function settle(id, status, justification, by) {
     await c.query('begin');
     const { rows: [r] } = await c.query(`select r.*,a.name rn,a.role rrole,b.name tn from call_requests r join users a on a.id=r.requester_id join users b on b.id=r.target_id where r.id=$1 for update of r`, [id]);
     if (!r || r.status !== 'pendente') { await c.query('rollback'); return null; }
-    const pat = r.rrole === 'paciente' ? r.requester_id : r.target_id, pro = r.rrole === 'paciente' ? r.target_id : r.requester_id;
+    const pp = r.kind && r.kind !== 'paciente'; // entre profissionais: quem chama ocupa o lugar de "paciente" só para reaproveitar a sala de vídeo
+    const pat = pp || r.rrole === 'paciente' ? r.requester_id : r.target_id, pro = pp || r.rrole === 'paciente' ? r.target_id : r.requester_id;
     const info = callInfo(status, { requester: r.rn, target: r.tn, reason: r.reason, justification, at: r.created_at });
     const { rows: [a] } = await c.query(`insert into appointments(patient_id,professional_id,starts_at,ends_at,status,call_id,call_info) values($1,$2,$3,$4,$5,$6,$7) returning id`, [pat, pro, r.created_at, new Date(new Date(r.created_at).getTime() + CALL_WINDOW_MIN * 60000), apptStatusFor(status), id, info]);
     await c.query('update call_requests set status=$2,decline_reason=$3,answered_at=now(),appointment_id=$4 where id=$1', [id, status, justification || null, a.id]);
-    if (status === 'aceita') await c.query('insert into care_team values($1,$2) on conflict do nothing', [pat, pro]);
+    if (status === 'aceita' && !pp) {
+      await c.query('insert into care_team values($1,$2) on conflict do nothing', [pat, pro]);
+      // Repasse da equipe: só quando o profissional integrou uma equipe por proposta aceita (termos congelados).
+      const { rows: [m] } = await c.query('select team_id,terms from team_members where user_id=$1 and terms is not null', [pro]);
+      if (m) {
+        const { rows: [prev] } = await c.query(`select 1 from call_settlements where professional_id=$1 and patient_id=$2 and status<>'anulado' limit 1`, [pro, pat]);
+        const sf = settlementFor(m.terms, { firstWithPatient: !prev });
+        if (sf) await c.query('insert into call_settlements(call_id,team_id,professional_id,patient_id,model,currency,fee,team_pct,team_amount,pro_amount) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) on conflict do nothing', [id, m.team_id, pro, pat, m.terms.model, m.terms.currency || 'BRL', sf.fee, sf.pct, sf.team, sf.pro]);
+      }
+    }
     await c.query('commit'); return { ...r, status, appointment_id: a.id, decline_reason: justification || null, by };
   } catch (e) { await c.query('rollback').catch(() => {}); throw e; } finally { c.release(); }
 }
@@ -46,19 +64,25 @@ export default async function (app) {
   app.post('/api/calls', A, async (req, rep) => {
     const b = z.object({ targetId: uuid, reason: z.string().trim().max(200).optional() }).parse(req.body), u = req.user;
     const [t] = await q('select id,name,role from users where id=$1 and active and not pending', [b.targetId]);
-    if (!t || !pairOk(u.role, t.role)) return rep.code(403).send({ error: 'Chamada não permitida para este usuário' });
+    if (!t || !(pairOk(u.role, t.role) || proPair(u.role, t.role))) return rep.code(403).send({ error: 'Chamada não permitida para este usuário' });
     await expireOld();
     if ((await q(`select 1 from call_requests where requester_id=$1 and status='pendente' and expires_at>now()`, [u.sub])).length) return rep.code(409).send({ error: 'Você já tem uma chamada em andamento' });
     if (!(await available(u)).some(x => x.id === t.id)) return rep.code(409).send({ error: 'Este usuário não está disponível agora' });
-    const [r] = await q(`insert into call_requests(requester_id,target_id,reason,expires_at) values($1,$2,$3,now()+interval '${RING_SECONDS} seconds') returning *`, [u.sub, t.id, b.reason || null]);
+    const pp = proPair(u.role, t.role), rt = pp ? await teamOf(u.sub) : null, tt = pp ? await teamOf(t.id) : null, k = pp ? classify(rt, tt) : { kind: 'paciente', team: null, teams: [] };
+    const byAdmin = pp && !!rt && !!(await q(`select 1 from team_members where user_id=$1 and role='admin'`, [u.sub])).length;
+    const [r] = await q(`insert into call_requests(requester_id,target_id,reason,kind,team_id,by_admin,expires_at) values($1,$2,$3,$4,$5,$6,now()+interval '${RING_SECONDS} seconds') returning *`, [u.sub, t.id, b.reason || null, k.kind, k.team, byAdmin]);
+    // Administradores das equipes envolvidas são avisados (sem impedir a chamada); podem bloqueá-la a qualquer momento.
+    for (const tm of k.teams) for (const a of (await q(`select user_id from team_members where team_id=$1 and role='admin' and user_id<>all($2::uuid[])`, [tm, [u.sub, t.id]]))) await notify(a.user_id, 'chamada_equipe', `Chamada ${k.kind === 'interna' ? 'interna' : 'externa'}: ${u.name || 'profissional'} → ${t.name}`, `Você pode acompanhar e bloquear em Equipes. ${b.reason ? 'Motivo: ' + b.reason : ''}`.trim(), null, r.id);
     await audit(req, 'chamada_solicitada', 'user', t.id); return view(r);
   });
   // Batimento: marca presença, expira chamadas sem resposta e devolve o que mudou (recebidas e enviadas).
   app.get('/api/calls/poll', A, async req => {
     touch(req.user.sub); await expireOld();
-    const incoming = await q(`select r.id,r.reason,r.created_at,r.expires_at,u.name,u.role,u.cargo from call_requests r join users u on u.id=r.requester_id where r.target_id=$1 and r.status='pendente' and r.expires_at>now() order by r.created_at`, [req.user.sub]);
+    const incoming = await q(`select r.id,r.reason,r.kind,r.created_at,r.expires_at,u.name,u.role,u.cargo,(select t.name from team_members m join teams t on t.id=m.team_id where m.user_id=r.requester_id) team from call_requests r join users u on u.id=r.requester_id where r.target_id=$1 and r.status='pendente' and r.expires_at>now() order by r.created_at`, [req.user.sub]);
     const [out] = await q(`select r.*,u.name target_name from call_requests r join users u on u.id=r.target_id where r.requester_id=$1 and r.created_at>now()-interval '10 minutes' order by r.created_at desc limit 1`, [req.user.sub]);
-    return { incoming: incoming.map(r => ({ id: r.id, from: r.name, cargo: r.cargo, role: r.role, reason: r.reason, expiresAt: r.expires_at })), outgoing: out ? { ...view(out), target: out.target_name } : null };
+    const bl = await q(`select r.id,r.block_reason,r.appointment_id,u.name from call_requests r left join users u on u.id=r.blocked_by where r.status='bloqueada' and r.blocked_at>now()-interval '3 minutes' and (r.requester_id=$1 or r.target_id=$1) order by r.blocked_at desc limit 1`, [req.user.sub]);
+    const blocked = bl[0] ? { id: bl[0].id, by: bl[0].name, reason: bl[0].block_reason, appointmentId: bl[0].appointment_id } : null;
+    return { incoming: incoming.map(r => ({ id: r.id, from: r.name, cargo: r.cargo, role: r.role, reason: r.reason, kind: r.kind, team: r.team, expiresAt: r.expires_at })), blocked, outgoing: out ? { ...view(out), target: out.target_name } : null };
   });
   app.post('/api/calls/:id/accept', A, async (req, rep) => {
     const id = uuid.parse(req.params.id), [r] = await q('select * from call_requests where id=$1', [id]);
@@ -79,6 +103,25 @@ export default async function (app) {
     if (!r || r.requester_id !== req.user.sub) return rep.code(404).send({ error: 'Chamada não encontrada' });
     const s = await settle(id, 'cancelada', 'Chamada cancelada por quem solicitou.', req.user.sub); if (!s) return rep.code(409).send({ error: 'Esta chamada já terminou' });
     return { ok: true };
+  });
+  // Administrador da equipe (ou geral) bloqueia a chamada a qualquer momento: encerra a em curso e anula o repasse.
+  app.post('/api/calls/:id/block', A, async (req, rep) => {
+    const id = uuid.parse(req.params.id), { reason } = z.object({ reason: z.string().trim().max(300).optional() }).parse(req.body || {});
+    const [r] = await q('select * from call_requests where id=$1', [id]);
+    if (!r || r.kind === 'paciente') return rep.code(404).send({ error: 'Chamada não encontrada' });
+    const ok = req.user.role === 'admin' || (await q(`select 1 from team_members where user_id=$1 and role='admin' and team_id=any($2::uuid[])`, [req.user.sub, [await teamOf(r.requester_id), await teamOf(r.target_id)].filter(Boolean)])).length > 0;
+    if (!ok) return rep.code(403).send({ error: 'Somente o administrador da equipe pode bloquear' });
+    if (!['pendente', 'aceita'].includes(r.status)) return rep.code(409).send({ error: 'Esta chamada já terminou' });
+    const txt = (reason || '').trim() || 'Bloqueada pelo administrador da equipe.', c = await pool.connect();
+    try {
+      await c.query('begin');
+      await c.query(`update call_requests set status='bloqueada',blocked_by=$2,blocked_at=now(),block_reason=$3 where id=$1`, [id, req.user.sub, txt]);
+      if (r.appointment_id) await c.query(`update appointments set status='cancelado',call_info=coalesce(call_info,'')||$2 where id=$1`, [r.appointment_id, ' Chamada bloqueada pelo administrador da equipe: ' + txt]);
+      await c.query(`update call_settlements set status='anulado' where call_id=$1`, [id]);
+      await c.query('commit');
+    } catch (e) { await c.query('rollback').catch(() => {}); throw e; } finally { c.release(); }
+    for (const uid of [r.requester_id, r.target_id]) await notify(uid, 'chamada_bloqueada', 'Chamada encerrada pelo administrador da equipe', txt, null, id);
+    await audit(req, 'chamada_bloqueada', 'user', r.target_id); return { ok: true };
   });
   // Mensagem de recusa pré-configurada (usada quando o profissional recusa sem escrever outra).
   app.put('/api/me/decline-msg', { preHandler: app.role(...HEALTH) }, async req => { const { message } = z.object({ message: z.string().trim().max(300) }).parse(req.body); await q('update users set decline_msg=$2 where id=$1', [req.user.sub, message || null]); return { ok: true }; });

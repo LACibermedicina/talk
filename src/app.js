@@ -22,7 +22,7 @@ await app.register(cookie);
 await app.register(jwt, { secret: process.env.JWT_SECRET, cookie: { cookieName: 't', signed: false } });
 await app.register(rate, { max: 300, timeWindow: '1 minute' });
 await app.register(ws);
-await app.register(multipart, { limits: { fileSize: 10e6, files: 1 } });
+await app.register(multipart, { limits: { fileSize: 10e6, files: 3 } });
 app.addHook('onRequest', async (req, rep) => { if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) { const o = req.headers.origin; if (o && o !== process.env.APP_ORIGIN) return rep.code(403).send({ error: 'origem não permitida' }); } });
 app.decorate('auth', async (req, rep) => {
   try { await req.jwtVerify(); } catch { return rep.code(401).send({ error: 'não autenticado' }); }
@@ -38,7 +38,7 @@ app.setErrorHandler((e, req, rep) => {
   rep.code(c).send({ error: c < 500 || c === 503 ? e.message : 'erro interno' });
 });
 installBilling(app);
-for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta'])
+for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta', 'equipes'])
   await app.register((await import(`./routes/${m}.js`)).default);
 await app.register(stat, { root: new URL('../public/', import.meta.url).pathname, wildcard: false });
 app.setNotFoundHandler((req, rep) => req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/ws') ? rep.sendFile('index.html') : rep.code(404).send({ error: 'não encontrado' }));

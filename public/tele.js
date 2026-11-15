@@ -14,7 +14,7 @@
   const stopRing = () => { clearInterval(T.tick); clearInterval(T.ring); T.tick = T.ring = null; };
   function showIncoming(c) {
     stopRing(); T.inc = c.id;
-    modal(`<div class="tcb" role="alertdialog" aria-label="${ES('Chamada recebida')}"><div class="tci">${ic(ICON, 28)}</div><h3>${ES('Teleconsulta solicitada')}</h3><p><b>${E(c.from)}</b>${c.cargo ? ' · ' + E(c.cargo) : ''}</p>${c.reason ? `<p class="mu">${ES('Motivo')}: ${E(c.reason)}</p>` : ''}<p class="mu" id="tcl"></p>
+    modal(`<div class="tcb" role="alertdialog" aria-label="${ES('Chamada recebida')}"><div class="tci">${ic(ICON, 28)}</div><h3>${ES('Teleconsulta solicitada')}</h3>${c.kind === 'interna' ? `<p class="mu">${ES('Colega da sua equipe')}${c.team ? ': ' + E(c.team) : ''}</p>` : c.kind === 'externa' ? `<p class="mu">${ES('Chamada externa')}${c.team ? ' · ' + E(c.team) : ' · ' + ES('profissional autônomo')}</p>` : ''}<p><b>${E(c.from)}</b>${c.cargo ? ' · ' + E(c.cargo) : ''}</p>${c.reason ? `<p class="mu">${ES('Motivo')}: ${E(c.reason)}</p>` : ''}<p class="mu" id="tcl"></p>
       <label class="mu" for="tcd">${ES('Se for recusar, a justificativa que a pessoa verá:')}</label><textarea id="tcd" rows="2" maxlength="300" placeholder="${ES('Deixe em branco para usar a sua mensagem padrão')}">${E(S.me.decline_msg || '')}</textarea>
       <div class="tcr"><button class="pbtn" data-a="tcacc" data-p="${c.id}">${ES('Atender')}</button><button data-a="tcdec" data-p="${c.id}" class="dng">${ES('Recusar')}</button></div></div>`);
     const upd = () => { const el = $('#tcl'); if (el) el.textContent = ES('Expira em') + ' ' + fmtLeft(c.expiresAt) + ' s'; }; upd(); T.tick = setInterval(upd, 1000); beep(); T.ring = setInterval(beep, 2200);
@@ -24,15 +24,20 @@
     const t = { recusada: ['Chamada recusada', o.declineReason], sem_resposta: ['Sem resposta', o.declineReason], aceita: ['Chamada atendida', ''] }[o.status]; if (!t || o.status === 'aceita') return;
     modal(`<div class="tcb" role="alertdialog"><h3>${ES(t[0])}</h3><p><b>${E(o.target || '')}</b></p><p>${E(t[1] || '')}</p><p class="mu">${ES('A tentativa ficou registrada na sua agenda.')}</p><div class="tcr"><button class="pbtn" data-a="tcok">${ES('Entendi')}</button></div></div>`);
   };
+  async function blocked(b) {
+    stopRing(); T.inc = null; if (CALL.c) await leave();
+    modal(`<div class="tcb" role="alertdialog"><h3>${ES('Chamada encerrada pelo administrador da equipe')}</h3>${b.by ? `<p><b>${E(b.by)}</b></p>` : ''}<p>${E(b.reason || '')}</p><p class="mu">${ES('O encerramento ficou registrado na agenda.')}</p><div class="tcr"><button class="pbtn" data-a="tcok">${ES('Entendi')}</button></div></div>`);
+  }
   async function join2(aid) { if (CALL.c) return; await run(async () => { const t = await api('/video/token', { m: 'POST', b: { appointmentId: aid } }); await join(t, aid); }); }
   async function poll() {
     if (!S.me) return; let r; try { r = await api('/calls/poll'); } catch { return; }
+    if (r.blocked && T.blk !== r.blocked.id) { T.blk = r.blocked.id; if (!T.first) blocked(r.blocked); } else if (r.blocked && T.first) T.blk = r.blocked.id;
     const c = (r.incoming || [])[0];
     if (c && T.inc !== c.id && !CALL.c) showIncoming(c); else if (!c && T.inc) hideIncoming();
     const o = r.outgoing, key = o ? o.id + ':' + o.status : '';
     if (o) {
       const was = T.out && T.out.id === o.id ? T.out.status : null; T.out = o;
-      if (key !== T.seen) { T.seen = key; if (!T.first && o.status !== 'pendente' && was === 'pendente') { if (o.status === 'aceita') join2(o.appointmentId); else if (o.status !== 'cancelada') result(o); } }
+      if (key !== T.seen) { T.seen = key; if (!T.first && o.status !== 'pendente' && was === 'pendente') { if (o.status === 'aceita') join2(o.appointmentId); else if (o.status !== 'cancelada' && o.status !== 'bloqueada') result(o); } }
       if (S.view === 'tele' && !busyInput()) { if (!T.load) { T.load = true; loadAv().finally(() => { T.load = false; }); } else render(); }
     } else T.out = null;
     T.first = false;
@@ -42,11 +47,14 @@
   async function loadAv() { try { T.av = await api('/calls/available'); } catch { T.av = []; } if (S.view === 'tele') render(); }
   CENTER.tele = () => {
     const pend = T.out && T.out.status === 'pendente', pro = HLT(S.me.role);
-    const list = T.av.length ? T.av.map(x => `<div class="dr tcrow"><i class="onl" style="background:#22c55e"></i><span class="tcn"><b>${E(x.name)}</b> <span class="mu">${x.cargo ? E(x.cargo) : ES(ROLE[x.role] || '')}</span></span><button class="pbtn" data-a="tcall" data-p="${x.id}" ${pend ? 'disabled' : ''}>${ES('Solicitar teleconsulta')}</button></div>`).join('') : `<p class="mu">${ES(`Nenhum(a) ${who()} disponível agora. Quem está ocupado, offline ou com consulta marcada neste horário não aparece.`)}</p>`;
+    const rowH = x => `<div class="dr tcrow"><i class="onl" style="background:#22c55e"></i><span class="tcn"><b>${E(x.name)}</b> <span class="mu">${x.cargo ? E(x.cargo) : ES(ROLE[x.role] || '')}${x.team ? ' · ' + E(x.team) : ''}</span></span><button class="pbtn" data-a="tcall" data-p="${x.id}" ${pend ? 'disabled' : ''}>${ES('Solicitar teleconsulta')}</button></div>`;
+    const GR = [['paciente', 'Pacientes'], ['equipe', 'Colegas da sua equipe'], ['externo', 'Outros profissionais (externos / autônomos)']];
+    const grouped = pro && T.av.some(x => x.grp && x.grp !== 'paciente') ? GR.map(([g, t]) => { const l = T.av.filter(x => (x.grp || 'paciente') === g); return l.length ? `<h4 class="tch">${ES(t)}</h4>` + l.map(rowH).join('') : ''; }).join('') : '';
+    const list = grouped || T.av.length ? (grouped || T.av.map(rowH).join('')) : `<p class="mu">${ES(`Nenhum(a) ${who()} disponível agora. Quem está ocupado, offline ou com consulta marcada neste horário não aparece.`)}</p>`;
     const calling = pend ? `<div class="al y tcw"><b>${ES('Chamando')} ${E(T.out.target || '')}…</b> ${ES('aguardando resposta')}<button data-a="tccan" data-p="${T.out.id}" style="float:right">${ES('Cancelar')}</button></div>` : '';
     const last = T.out && T.out.status !== 'pendente' && T.out.status !== 'aceita' ? `<div class="al"><b>${ES(T.out.status === 'recusada' ? 'Última chamada recusada' : T.out.status === 'cancelada' ? 'Última chamada cancelada' : 'Última chamada sem resposta')}</b> — ${E(T.out.target || '')}${T.out.declineReason ? `<br>${E(T.out.declineReason)}` : ''}</div>` : '';
     const msg = pro ? `<div class="cd"><h3>${ES('Mensagem padrão de recusa')}</h3><p class="mu">${ES('Aparece para quem chamou quando você recusa sem escrever outra. Você também pode personalizar no momento da recusa.')}</p><textarea id="tdm" style="width:100%" rows="2" maxlength="300" placeholder="${ES('Ex.: Estou em atendimento. Agende um horário ou tente novamente mais tarde.')}">${E(S.me.decline_msg || '')}</textarea><div style="margin-top:6px"><button data-a="tdsave">${ES('Salvar mensagem')}</button></div></div>` : '';
-    return bar('Teleconsulta') + `<div class="cv"><div class="cd"><h3>${ES(S.me.role === 'paciente' ? 'Médicos disponíveis agora' : 'Pacientes disponíveis agora')}</h3><p class="mu">${ES('Disponível = estado Online e nenhuma consulta na agenda nos próximos 30 minutos. Cada chamada e o seu desfecho ficam registrados na agenda dos dois lados.')}</p>${calling}${last}<input id="tcr" maxlength="200" placeholder="${ES('Motivo da chamada (opcional)')}" style="width:100%;margin:6px 0">${list}</div>${msg}</div>`;
+    return bar('Teleconsulta') + `<div class="cv"><div class="cd"><h3>${ES(S.me.role === 'paciente' ? 'Médicos disponíveis agora' : 'Profissionais e pacientes disponíveis agora')}</h3><p class="mu">${ES('Disponível = estado Online e nenhuma consulta na agenda nos próximos 30 minutos. Cada chamada e o seu desfecho ficam registrados na agenda dos dois lados.')}</p>${calling}${last}<input id="tcr" maxlength="200" placeholder="${ES('Motivo da chamada (opcional)')}" style="width:100%;margin:6px 0">${list}</div>${msg}</div>`;
   };
   const _v = A.view; A.view = p => p === 'tele' ? run(async () => { S.view = 'tele'; S.lo = 0; T.av = []; render(); await loadAv(); }) : _v(p);
   Object.assign(A, {
