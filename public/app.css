@@ -524,3 +524,14 @@ body:has(.app .rail) #langbar{display:none}
 .epifb{display:none;position:absolute;inset:0;align-items:center}.epiw.fb .epifb{display:flex}.epiw.fb .epi3d{display:none}.epiw.fb .epib0{height:auto}
 .epiw:not(.fb) .epi{animation:none}.epiw.jump:not(.fb) .epi3d{animation:epij .6s cubic-bezier(.3,1.6,.5,1)}
 @media (max-width:380px){.epib0{flex-basis:118px!important;height:150px}.epi3d{width:118px;height:150px}}
+
+/* Mascote ao lado do login (telas largas) e compacto no celular */
+.epiw.fb .epib0{height:auto!important}.epiw.fb .epifb{position:static;display:flex;justify-content:center}.epiw.fb .epi{width:130px}
+@media (max-width:759px){.epib0{flex:0 0 112px!important;height:140px!important}.epi3d{width:112px;height:140px}.epib{font-size:12.5px}}
+@media (min-width:760px){
+.login{max-width:none!important;width:max-content;display:grid;grid-template-columns:300px 380px;column-gap:36px;align-items:start;margin:max(16px,9vh) auto!important}
+.login>*{grid-column:2}.login>.epiw{grid-column:1;grid-row:1/span 5;align-self:center;flex-direction:column-reverse;align-items:center;gap:14px;margin:0}
+.login>.epiw .epib0{flex:0 0 auto!important;width:280px;height:340px!important}.login>.epiw .epi3d{width:280px;height:340px}
+.login>.epiw.fb .epib0{height:auto!important}.login>.epiw.fb .epi{width:220px}
+.login>.epiw .epib{flex:0 0 auto;width:100%;text-align:center;font-size:14px}
+.login>.epiw .epib:before{left:50%;top:auto;bottom:-7px;border:0;border-right:1.5px solid var(--ln);border-bottom:1.5px solid var(--ln);transform:translateX(-50%) rotate(45deg)}}

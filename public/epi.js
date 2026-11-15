@@ -45,8 +45,8 @@
   const post = m => { const f = FR(); try { if (f && f.contentWindow && !W().classList.contains('fb')) f.contentWindow.postMessage(m, ORI); } catch { /* sem iframe */ } };
   // o 3D avisa quando desenhou ('ok') ou quando o navegador não tem WebGL ('sem'): aí mostramos o desenho 2D
   addEventListener('message', e => { if (e.source !== (FR() || {}).contentWindow) return; const d = e.data || {}, w = W(); if (!w) return;
-    if (d.rv3d === 'sem') w.classList.add('fb'); if (d.rv3d === 'ok') { w.classList.add('ok3'); if (w.classList.contains('hi')) wave(3200); } });
-  setTimeout(() => { const w = W(); if (w && !w.classList.contains('ok3')) w.classList.add('fb'); }, 4000);
+    if (d.rv3d === 'sem') w.classList.add('fb'); if (d.rv3d === 'ok') { w.classList.add('ok3'); w.classList.remove('fb'); if (w.classList.contains('hi')) wave(3200); } });
+  setTimeout(() => { const w = W(); if (w && !w.classList.contains('ok3')) w.classList.add('fb'); }, 9000);
   const say = (txt, ms) => { const b = document.getElementById('epit'); if (!b) return; b.textContent = tr(txt); clearTimeout(S_.t); if (ms) S_.t = setTimeout(() => nextTip(), ms); };
   const nextTip = () => { S_.i = (S_.i + 1) % TIPS.length; say(TIPS[S_.i]); };
   const mood = (c, ms) => { const w = W(); if (!w) return; w.classList.add(c); setTimeout(() => { const x = W(); if (x) x.classList.remove(c); }, ms); };
