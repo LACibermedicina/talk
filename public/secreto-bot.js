@@ -309,11 +309,13 @@ let apunta = null, apT = 0, acao = null, acaoT = 0, acaoDur = 0, proxima = reduz
 const ACOES = { acena: 2.6, pulo: .75, danca: 2.6, inclina: 1.9, levanta: 4.5, balao: 1.6, antena: 1.4, olha: 2.2, estetoscopio: 3.4, termometro: 2.8, martelo: 2.6, lanterna: 2.6 };
 const ITEM = { estetoscopio: 'estet', termometro: 'termo', martelo: 'martelo', lanterna: 'lanterna' };
 function sortear(t) { const ks = Object.keys(ACOES); acao = ks[Math.random() * ks.length | 0]; acaoT = 0; acaoDur = ACOES[acao]; inclina = Math.random() < .5 ? -.32 : .32; if (acao === 'olha') olhar = [Math.random() * 1.6 - .8, Math.random() * .6 - .25]; proxima = t + acaoDur + 2 + Math.random() * 4; }
+let vYaw = 0;   // giro do conjunto (cena imersiva): o app manda o ângulo em radianos
 function mouseLocal(x, y, escala) { mouse.px = x; mouse.py = y; mouse.escala = escala || Math.max(W, H) / 2; mouse.t = performance.now() / 1000; }
 addEventListener('pointermove', (e) => mouseLocal(e.clientX, e.clientY, Math.max(innerWidth, innerHeight) / 2));
 addEventListener('message', (e) => {
   if (alvoMsg !== '*' && e.origin !== location.origin) return; const d = e.data || {};
   if (d.rv3dPose) { pose = d.rv3dPose === 'sit' ? 'sit' : 'stand'; acenoFixo = d.rv3dPose === 'wave'; }
+  if (typeof d.rv3dYaw === 'number') vYaw = d.rv3dYaw;
   if (Array.isArray(d.rv3dMouse)) mouseLocal(d.rv3dMouse[0], d.rv3dMouse[1], d.rv3dMouse[2]);
   if (d.rv3dAct && ACOES[d.rv3dAct]) { acao = d.rv3dAct; acaoT = 0; acaoDur = ACOES[acao]; proxima = performance.now() / 1000 - t0 + acaoDur + 4; }   // o app pede um movimento (ex.: pular ao trocar de lugar)
   if ('rv3dPoint' in d) apunta = Array.isArray(d.rv3dPoint) ? { x: d.rv3dPoint[0], y: d.rv3dPoint[1] } : null;   // alvo em px dentro do quadro: a mão aponta para lá
@@ -350,7 +352,7 @@ function quadro() {
   const resp = Math.sin(t * 2.1) * .012, flut = reduz ? 0 : Math.sin(t * 1.6) * .03;
   // aplica
   root.p = [0, E.y + pulo * .55 + Math.abs(Math.sin(t * 6.5)) * .1 * E.danca + flut, 0];
-  root.r = [0, E.lean + Math.sin(t * 3.2) * .18 * E.danca, Math.sin(t * 6.5) * .07 * E.danca];
+  root.r = [0, vYaw + E.lean + Math.sin(t * 3.2) * .18 * E.danca, Math.sin(t * 6.5) * .07 * E.danca];
   root.s = [1 / Math.sqrt(achata), achata, 1 / Math.sqrt(achata)];
   corpo.s = [1, 1 + resp, 1];
   legs.forEach((l, i) => { l.r = [E.leg + (E.leg > -.2 ? Math.sin(t * 6.5 + i * Math.PI) * .25 * E.danca : 0), 0, 0]; });

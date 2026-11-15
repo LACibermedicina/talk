@@ -2888,5 +2888,19 @@ window.I18N_DICT = {
 "Deixa eu iluminar a nossa logomarca!": ["¡Déjame iluminar nuestro logotipo!", "", "Let me light up our logo!", "让我照亮我们的标志！"],
 "Começa por aqui, ó! Estou de olho no teu campo.": ["¡Empieza por aquí! Estoy vigilando tu campo.", "", "Start right here! I'm keeping an eye on your field.", "从这里开始！我在盯着你的输入框。"],
 "Febre de senha esquecida? Peça ao administrador!": ["¿Fiebre de contraseña olvidada? ¡Pide ayuda al administrador!", "", "Forgotten-password fever? Ask the administrator!", "忘记密码发烧了？请联系管理员！"],
-"Sabia que o balão também é meu trampolim?": ["¿Sabías que el globo también es mi trampolín?", "", "Did you know the bubble is also my trampoline?", "你知道气泡也是我的蹦床吗？"]
+"Sabia que o balão também é meu trampolim?": ["¿Sabías que el globo también es mi trampolín?", "", "Did you know the bubble is also my trampoline?", "你知道气泡也是我的蹦床吗？"],
+"Reiniciar vista": ["Reiniciar vista", "", "Reset view", "重置视角"],
+"Ver o Talk.M3D em 3D imersivo": ["Ver Talk.M3D en 3D inmersivo", "", "See Talk.M3D in immersive 3D", "沉浸式 3D 查看 Talk.M3D"],
+"Clique para ver em 3D": ["Haz clic para ver en 3D", "", "Click to see it in 3D", "点击查看 3D"],
+"Vista 3D imersiva do Talk.M3D": ["Vista 3D inmersiva de Talk.M3D", "", "Talk.M3D immersive 3D view", "Talk.M3D 沉浸式 3D 视图"],
+"Clique e arraste para girar · role para aproximar · Esc para fechar": ["Haz clic y arrastra para girar · desplaza para acercar · Esc para cerrar", "", "Click and drag to rotate · scroll to zoom · Esc to close", "点击并拖动旋转 · 滚动缩放 · Esc 关闭"],
+"Bem-vindo(a) ao Talk.M3D em 3D! Arraste para girar.": ["¡Bienvenido(a) a Talk.M3D en 3D! Arrastra para girar.", "", "Welcome to Talk.M3D in 3D! Drag to rotate.", "欢迎来到 3D 版 Talk.M3D！拖动即可旋转。"],
+"Arraste para girar tudo em 3D!": ["¡Arrastra para girar todo en 3D!", "", "Drag to rotate everything in 3D!", "拖动即可 3D 旋转全部！"],
+"Role o mouse para aproximar ou afastar.": ["Usa la rueda del mouse para acercar o alejar.", "", "Scroll the mouse wheel to zoom in or out.", "滚动鼠标滚轮可放大或缩小。"],
+"Este é o consultório digital do Talk.M3D.": ["Este es el consultorio digital de Talk.M3D.", "", "This is the Talk.M3D digital clinic.", "这是 Talk.M3D 数字诊所。"],
+"Esc fecha e volta ao login.": ["Esc cierra y vuelve al inicio de sesión.", "", "Esc closes and returns to login.", "按 Esc 关闭并返回登录。"],
+"Auscultando o teclado… tudo em ordem!": ["Auscultando el teclado… ¡todo en orden!", "", "Listening to the keyboard… all good!", "正在听诊键盘……一切正常！"],
+"Olá! Seja bem-vindo(a)!": ["¡Hola! ¡Bienvenido(a)!", "", "Hello! Welcome!", "你好！欢迎！"],
+"Teste de reflexo no painel. Tudo certo!": ["Prueba de reflejos en el panel. ¡Todo bien!", "", "Reflex test on the panel. All good!", "正在测试面板反射。一切正常！"],
+"Gostou da vista? Gire para ver todos os lados!": ["¿Te gusta la vista? ¡Gira para ver todos los lados!", "", "Like the view? Rotate to see every side!", "喜欢这个视角吗？旋转查看每一面！"]
 };
