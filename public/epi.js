@@ -8,49 +8,64 @@
     'A IA propõe rascunhos, mas quem decide é sempre o profissional.',
     'Suas notas de atendimento são cifradas. Privacidade em primeiro lugar!',
     'Clique em mim para ouvir outra dica.'];
-  const S_ = { i: 0, t: null, w: null };
+  const S_ = { i: 0, t: null, w: null, at: null, idle: null, hop: 0 };
   const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const ORI = location.origin && location.origin !== 'null' ? location.origin : '*';
+  const CW = 160, BOT_CX = 103, FEET = 176;   // tamanho da camada 3D, centro do corpo e linha dos pés (px)
   window.epiH = kind => {
     const first = !window.__epiHi; window.__epiHi = true;
     const err = S.err ? 'Ops! Confira os dados e tente de novo.' : null;
     const msg = err || (kind === 'signup' ? 'Que bom ter você por aqui! Preencha os dados para criar sua conta.' : TIPS[0]);
-    return `<div class="epiw ${first ? 'hi' : ''} ${err ? 'no' : ''}" data-epi="${kind}"><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Mascote Secreto-Bot: toque para ouvir uma dica'))}"><i class="epiped" aria-hidden="true"></i><iframe class="epi3d" src="/mascote.html?pose=sit" title="" tabindex="-1" aria-hidden="true" loading="eager"></iframe></button><div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div></div>`;
+    setTimeout(start, 0);   // depois que a tela foi montada
+    return `<div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div><div class="epiw ${first ? 'hi' : ''}" data-epi="${kind}"><iframe class="epi3d" src="/mascote.html?pose=sit" title="" tabindex="-1" aria-hidden="true" loading="eager"></iframe><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Mascote Secreto-Bot: toque para ouvir uma dica'))}"></button></div>`;
   };
   const W = () => document.querySelector('.epiw');
+  const L = () => document.querySelector('.login');
   const FR = () => { const w = W(); return w && w.querySelector('.epi3d'); };
   const post = m => { const f = FR(); try { if (f && f.contentWindow && !W().classList.contains('fb')) f.contentWindow.postMessage(m, ORI); } catch { /* sem iframe */ } };
-  // o 3D avisa quando desenhou ('ok') ou quando o navegador não tem WebGL ('sem'): nesse caso some só o desenho, o balão de dicas fica
   addEventListener('message', e => { if (e.source !== (FR() || {}).contentWindow) return; const d = e.data || {}, w = W(); if (!w) return;
-    if (d.rv3d === 'sem') w.classList.add('fb'); if (d.rv3d === 'ok') { w.classList.add('ok3'); w.classList.remove('fb'); if (w.classList.contains('hi')) wave(3200); } });
+    if (d.rv3d === 'sem') w.classList.add('fb'); if (d.rv3d === 'ok') { w.classList.add('ok3'); if (w.classList.contains('hi')) wave(3200); } });
   const say = (txt, ms) => { const b = document.getElementById('epit'); if (!b) return; b.textContent = tr(txt); clearTimeout(S_.t); if (ms) S_.t = setTimeout(() => nextTip(), ms); };
   const nextTip = () => { S_.i = (S_.i + 1) % TIPS.length; say(TIPS[S_.i]); };
-  const mood = (c, ms) => { const w = W(); if (!w) return; w.classList.add(c); setTimeout(() => { const x = W(); if (x) x.classList.remove(c); }, ms); };
   const wave = ms => { post({ rv3dPose: 'wave' }); clearTimeout(S_.w); S_.w = setTimeout(() => post({ rv3dPose: 'sit' }), ms || 2600); };
-  const rectIn = (el, f) => { const r = el.getBoundingClientRect(), q = f.getBoundingClientRect(); return { x: r.left + Math.min(26, r.width * .2) - q.left, y: r.top + r.height / 2 - q.top, cx: r.left + Math.min(26, r.width * .2), cy: r.top + r.height / 2, r }; };
-  // aponta a mão para o elemento e faz o círculo luminoso "pulsar" nele; a cabeça também olha para lá
-  let cur = null;
-  function aim(el, say_) {
-    const w = W(), f = FR(), L = document.querySelector('.login'); if (!w || !f || !L || !el) return; cur = el;
-    const t = rectIn(el, f); post({ rv3dPoint: [t.x, t.y] }); post({ rv3dMouse: [t.x, t.y, 260] });
-    let ring = L.querySelector('.epiring'); if (!ring) { ring = document.createElement('i'); ring.className = 'epiring'; ring.setAttribute('aria-hidden', 'true'); L.append(ring); }
-    const lr = L.getBoundingClientRect(); ring.style.left = (t.cx - lr.left) + 'px'; ring.style.top = (t.cy - lr.top) + 'px'; ring.classList.remove('on'); void ring.offsetWidth; ring.classList.add('on');
-    if (say_) say(say_);
-  }
-  const follow = e => { const f = FR(); if (!f || e.target.closest && e.target.closest('.login form,.login p')) return; const p = e.touches ? e.touches[0] : e, r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] }); };
-  document.addEventListener('pointermove', follow, { passive: true });
-  const first = () => document.querySelector('.login input:not([type=hidden]):not([type=checkbox])');
+  const btn = () => document.querySelector('.login form>button:last-of-type');
+  const fields = () => [...document.querySelectorAll('.login form input:not([type=hidden]):not([type=checkbox]),.login form select')];
+  // onde o mascote pousa: em cima do botão (lado direito) ou na borda de cima do campo
+  const spot = el => { const l = L(), r = el.getBoundingClientRect(), q = l.getBoundingClientRect(); return { x: r.left - q.left + r.width * .78 - BOT_CX, y: r.top - q.top - FEET + 2 }; };
+  const put = (el, hop) => {
+    const w = W(), l = L(); if (!w || !l || !el) return; const t = spot(el), cur = w.__pos || t; w.__pos = t; S_.at = el;
+    const f = p => `translate(${p.x}px,${p.y}px)`;
+    if (hop && !matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      post({ rv3dAct: 'pulo' }); w.style.transform = f(t);
+      const a = w.animate([{ transform: f(cur) }, { transform: `translate(${(cur.x + t.x) / 2}px,${Math.min(cur.y, t.y) - 46}px)`, offset: .45 }, { transform: f(t) }], { duration: 720, easing: 'cubic-bezier(.3,.6,.4,1)' });
+      a.onfinish = () => squish(el);
+    } else w.style.transform = f(t);
+  };
+  // o campo/botão "cede" um pouquinho quando o mascote pousa
+  const squish = el => { try { el.animate([{ transform: 'scale(1,1)' }, { transform: 'scale(1.015,.94)' }, { transform: 'scale(1,1)' }], { duration: 320, easing: 'ease-out' }); } catch { /* sem animação */ } };
+  const ring = el => { const l = L(); if (!l) return; let g = l.querySelector('.epiring'); if (!g) { g = document.createElement('i'); g.className = 'epiring'; g.setAttribute('aria-hidden', 'true'); l.append(g); }
+    const r = el.getBoundingClientRect(), q = l.getBoundingClientRect(); g.style.left = (r.left - q.left + Math.min(26, r.width * .2)) + 'px'; g.style.top = (r.top - q.top + r.height / 2) + 'px'; g.classList.remove('on'); void g.offsetWidth; g.classList.add('on'); };
+  // aponta para algo fora de onde ele está sentado (links) com o ponteiro
+  const aim = el => { const f = FR(), w = W(); if (!f || !w || !el) return; const r = el.getBoundingClientRect(), q = f.getBoundingClientRect(); post({ rv3dPoint: [r.left + 20 - q.left, r.top + r.height / 2 - q.top] }); post({ rv3dMouse: [r.left + 20 - q.left, r.top + r.height / 2 - q.top, 260] }); ring(el); };
+  const noAim = () => post({ rv3dPoint: null });
   const SAY = { em: 'Comece por aqui: seu usuário ou e-mail.', pw: 'Agora a sua senha. Eu não espio!', sn: 'Como você se chama?', se: 'Seu e-mail de acesso.', sp: 'Crie uma senha segura.' };
   const hint = el => el.matches('input,select,textarea') ? SAY[el.id] || 'Preencha este campo.' : el.matches('button') ? 'Pronto? Clique para entrar!' : 'Ainda não tem conta? Crie a sua aqui.';
-  const home = () => { if (S.err && $('#pw')) return $('#pw'); const a = document.activeElement; return a && a.closest && a.closest('.login') && a.matches('input,select,textarea') ? a : first(); };
-  document.addEventListener('pointerover', e => { const el = e.target.closest && e.target.closest('.login input,.login select,.login textarea,.login form button,.login p a,.login [data-a=gologin]'); if (el && el !== cur) aim(el, hint(el)); });
-  document.addEventListener('focusin', e => { const el = e.target; if (el.closest && el.closest('.login') && el.matches('input,select,textarea')) aim(el, hint(el)); });
-  document.addEventListener('focusout', e => { const el = e.target; if (el.id === 'pw' || el.id === 'sp') { wave(1800); say('Pronto! Agora é só entrar.', 4000); } });
-  addEventListener('resize', () => { if (cur && document.body.contains(cur)) aim(cur); });
-  // primeira abertura: depois do aceno, aponta para o primeiro campo
-  addEventListener('message', e => { const f = FR(); if (f && e.source === f.contentWindow && (e.data || {}).rv3d === 'ok') setTimeout(() => { const a = home(); if (a) aim(a); }, 3600); });
-  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-epi-click]')) { mood('jump', 700); wave(2600); nextTip(); } });
-  document.addEventListener('submit', e => { if (e.target.dataset && /^(login|signup)$/.test(e.target.dataset.f) && W()) { mood('jump', 700); wave(2600); say('Um instante, já abro para você…'); } }, true);
-  setInterval(() => { const w = W(); if (w && !w.classList.contains('shy')) { w.classList.add('blink'); setTimeout(() => w.classList.remove('blink'), 160); } }, 3600);
-  setInterval(() => { const w = W(); if (w && !w.classList.contains('no') && !document.activeElement.matches?.('input')) nextTip(); }, 12000);
+  function goto(el, talk) { if (!el) return; noAim(); if (el !== S_.at) put(el, true); if (talk !== false) say(hint(el)); ring(el); }
+  // "brincadeira": quando ninguém mexe, ele passeia pelos campos e volta para o botão
+  function idle() { clearInterval(S_.idle); S_.idle = setInterval(() => { const a = document.activeElement; if (!W() || (a && a.matches && a.matches('.login input,.login select'))) return; const seq = [...fields(), btn()].filter(Boolean), i = seq.indexOf(S_.at); const nx = seq[(i + 1) % seq.length]; goto(nx, false); if (Math.random() < .5) wave(1800); }, 7000); }
+  function start() {
+    const w = W(), b = btn(); if (!w || !b || w.__init) return; w.__init = true; put(b, false); idle();
+    if (S.err) { const l = L(); l.classList.add('shake'); setTimeout(() => l.classList.remove('shake'), 500); const p = $('#pw'); if (p) setTimeout(() => goto(p), 600); }
+  }
+  addEventListener('resize', () => { if (S_.at && document.body.contains(S_.at)) put(S_.at, false); });
+  document.addEventListener('focusin', e => { const el = e.target; if (el.closest && el.closest('.login') && el.matches('input,select')) goto(el); });
+  document.addEventListener('focusout', e => { const el = e.target; if (el.id === 'pw' || el.id === 'sp') { wave(1800); say('Pronto! Agora é só entrar.', 4000); setTimeout(() => { const a = document.activeElement; if (!(a && a.matches && a.matches('.login input,.login select'))) goto(btn(), false); }, 1500); } });
+  document.addEventListener('input', e => { if (e.target.closest && e.target.closest('.login')) { const f = FR(); try { f.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-7px)' }, { transform: 'translateY(0)' }], { duration: 180 }); } catch { /* sem animação */ } } });
+  document.addEventListener('pointerover', e => { const el = e.target.closest && e.target.closest('.login form>button:last-of-type,.login p a,.login [data-a=gologin]'); if (!el) return;
+    if (el.matches('form>button')) goto(el); else { if (S_.at !== btn()) put(btn(), true); aim(el); say(hint(el)); } });
+  const follow = e => { const f = FR(); if (!f || e.target.closest && e.target.closest('.login form,.login p')) return; const p = e.touches ? e.touches[0] : e, r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] }); };
+  document.addEventListener('pointermove', follow, { passive: true });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-epi-click]')) { post({ rv3dAct: 'pulo' }); wave(2600); nextTip(); } });
+  document.addEventListener('submit', e => { if (e.target.dataset && /^(login|signup)$/.test(e.target.dataset.f) && W()) { post({ rv3dAct: 'pulo' }); wave(2600); say('Um instante, já abro para você…'); } }, true);
+  setInterval(() => { const a = document.activeElement; if (W() && !(a && a.matches && a.matches('.login input'))) nextTip(); }, 14000);
 })();

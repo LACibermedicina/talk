@@ -302,6 +302,7 @@ addEventListener('message', (e) => {
   if (alvoMsg !== '*' && e.origin !== location.origin) return; const d = e.data || {};
   if (d.rv3dPose) { pose = d.rv3dPose === 'sit' ? 'sit' : 'stand'; acenoFixo = d.rv3dPose === 'wave'; }
   if (Array.isArray(d.rv3dMouse)) mouseLocal(d.rv3dMouse[0], d.rv3dMouse[1], d.rv3dMouse[2]);
+  if (d.rv3dAct && ACOES[d.rv3dAct]) { acao = d.rv3dAct; acaoT = 0; acaoDur = ACOES[acao]; proxima = performance.now() / 1000 - t0 + acaoDur + 4; }   // o app pede um movimento (ex.: pular ao trocar de lugar)
   if ('rv3dPoint' in d) apunta = Array.isArray(d.rv3dPoint) ? { x: d.rv3dPoint[0], y: d.rv3dPoint[1] } : null;   // alvo em px dentro do quadro: a mão aponta para lá
 });
 
