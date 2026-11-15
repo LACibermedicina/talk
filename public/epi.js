@@ -1,14 +1,15 @@
-/* Epi, o mascote da m3d.pro, na tela de entrada: acompanha o cursor com o olho, cobre o olho na senha, acena, pisca e dá dicas. */
+/* Mascote da tela de entrada: Secreto-Bot em 3D (iframe /mascote.html). Segue o cursor, vira o rosto na senha, acena e dá dicas.
+   Sem WebGL, cai no Epi 2D (SVG). */
 (() => {
   const tr = s => (window.I18N && I18N.t ? I18N.t(s) : s);
   const TIPS = [
-    'Olá! Eu sou o Epi, o mascote da m3d.pro. Bem-vindo ao Talk.M3D!',
+    'Olá! Eu sou o Secreto-Bot, o mascote do Talk.M3D. Bem-vindo!',
     'O ponto verde ao lado do nome mostra quem está online agora.',
     'Quando um médico está online e livre, você pode pedir uma teleconsulta na hora.',
     'A IA propõe rascunhos, mas quem decide é sempre o profissional.',
     'Suas notas de atendimento são cifradas. Privacidade em primeiro lugar!',
     'Clique em mim para ouvir outra dica.'];
-  const S_ = { i: 0, t: null, tip: null, blink: null };
+  const S_ = { i: 0, t: null, w: null };
   const esc = x => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const svg = `<svg class="epi" viewBox="0 0 200 240" aria-hidden="true" focusable="false">
   <defs><pattern id="epk" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#8f6236" opacity=".45"/><circle cx="6.5" cy="5.5" r="1.2" fill="#e3bf8c" opacity=".55"/><circle cx="4" cy="8" r=".8" fill="#7a5028" opacity=".4"/></pattern>
@@ -32,29 +33,41 @@
     <path d="M104 22L112 4" stroke="#7a8b88" stroke-width="3" stroke-linecap="round"/><circle class="ant" cx="113" cy="4" r="5.5" fill="#2aa593"/></g>
   <g class="armR"><rect x="154" y="122" width="12" height="62" rx="6" fill="#f3f7f6"/><circle cx="160" cy="190" r="13" fill="#fff" stroke="#cfdcd9" stroke-width="1.5"/></g>
 </svg>`;
+  const ORI = location.origin && location.origin !== 'null' ? location.origin : '*';
   window.epiH = kind => {
     const first = !window.__epiHi; window.__epiHi = true;
     const err = S.err ? 'Ops! Confira os dados e tente de novo.' : null;
     const msg = err || (kind === 'signup' ? 'Que bom ter você por aqui! Preencha os dados para criar sua conta.' : TIPS[0]);
-    return `<div class="epiw ${first ? 'hi' : ''} ${err ? 'no' : ''}" data-epi="${kind}"><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Epi, o mascote: toque para ouvir uma dica'))}">${svg}</button><div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div></div>`;
+    return `<div class="epiw ${first ? 'hi' : ''} ${err ? 'no' : ''}" data-epi="${kind}"><button type="button" class="epib0" data-epi-click aria-label="${esc(tr('Mascote Secreto-Bot: toque para ouvir uma dica'))}"><iframe class="epi3d" src="/mascote.html?pose=sit" title="" tabindex="-1" aria-hidden="true" loading="eager"></iframe><span class="epifb">${svg}</span></button><div class="epib" role="status" aria-live="polite" id="epit">${esc(tr(msg))}</div></div>`;
   };
   const W = () => document.querySelector('.epiw');
+  const FR = () => { const w = W(); return w && w.querySelector('.epi3d'); };
+  const post = m => { const f = FR(); try { if (f && f.contentWindow && !W().classList.contains('fb')) f.contentWindow.postMessage(m, ORI); } catch { /* sem iframe */ } };
+  // o 3D avisa quando desenhou ('ok') ou quando o navegador não tem WebGL ('sem'): aí mostramos o desenho 2D
+  addEventListener('message', e => { if (e.source !== (FR() || {}).contentWindow) return; const d = e.data || {}, w = W(); if (!w) return;
+    if (d.rv3d === 'sem') w.classList.add('fb'); if (d.rv3d === 'ok') { w.classList.add('ok3'); if (w.classList.contains('hi')) wave(3200); } });
+  setTimeout(() => { const w = W(); if (w && !w.classList.contains('ok3')) w.classList.add('fb'); }, 4000);
   const say = (txt, ms) => { const b = document.getElementById('epit'); if (!b) return; b.textContent = tr(txt); clearTimeout(S_.t); if (ms) S_.t = setTimeout(() => nextTip(), ms); };
   const nextTip = () => { S_.i = (S_.i + 1) % TIPS.length; say(TIPS[S_.i]); };
   const mood = (c, ms) => { const w = W(); if (!w) return; w.classList.add(c); setTimeout(() => { const x = W(); if (x) x.classList.remove(c); }, ms); };
+  const wave = ms => { post({ rv3dPose: 'wave' }); clearTimeout(S_.w); S_.w = setTimeout(() => post({ rv3dPose: 'sit' }), ms || 2600); };
   const look = (x, y) => { const w = W(); if (!w) return; const s = w.querySelector('.epi'); s.style.setProperty('--px', x.toFixed(1) + 'px'); s.style.setProperty('--py', y.toFixed(1) + 'px'); };
-  const follow = e => { const w = W(); if (!w || w.classList.contains('shy')) return; const p = e.touches ? e.touches[0] : e, r = w.querySelector('.epi').getBoundingClientRect(), dx = p.clientX - (r.left + r.width * .39), dy = p.clientY - (r.top + r.height * .52), d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 160); look(dx / d * 6.5 * k, dy / d * 6.5 * k); };
+  const follow = e => {
+    const w = W(); if (!w || w.classList.contains('shy')) return; const p = e.touches ? e.touches[0] : e, f = FR(); if (!f) return;
+    const r = f.getBoundingClientRect(); post({ rv3dMouse: [p.clientX - r.left, p.clientY - r.top, Math.max(innerWidth, innerHeight) / 2] });
+    const q = w.querySelector('.epi').getBoundingClientRect(), dx = p.clientX - (q.left + q.width * .39), dy = p.clientY - (q.top + q.height * .52), d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 160); look(dx / d * 6.5 * k, dy / d * 6.5 * k);
+  };
   document.addEventListener('pointermove', follow, { passive: true }); document.addEventListener('touchmove', follow, { passive: true });
+  const away = () => post({ rv3dMouse: [-500, -400, 300] });   // vira o rosto para o lado: não olha a senha
   document.addEventListener('focusin', e => {
     const w = W(); if (!w) return;
-    if (e.target.id === 'pw' || e.target.id === 'sp') { w.classList.add('shy'); say('Pode digitar, eu não olho!'); }
+    if (e.target.id === 'pw' || e.target.id === 'sp') { w.classList.add('shy'); away(); say('Pode digitar, eu não olho!'); }
     else { w.classList.remove('shy'); if (e.target.id === 'em' || e.target.id === 'sn' || e.target.id === 'se') say('Isso! Digite seu usuário ou e-mail.'); }
   });
-  document.addEventListener('focusout', e => { const w = W(); if (w && (e.target.id === 'pw' || e.target.id === 'sp')) { w.classList.remove('shy'); say('Pronto! Agora é só entrar.', 4000); } });
-  document.addEventListener('input', e => { const w = W(); if (!w || w.classList.contains('shy') || !/^(em|sn|se)$/.test(e.target.id)) return; const n = e.target.value.length, c = Math.min(1, n / 24); look(-5 + c * 10, 4.5); });
-  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-epi-click]')) { mood('jump', 700); nextTip(); } });
-  document.addEventListener('submit', e => { if (e.target.dataset && /^(login|signup)$/.test(e.target.dataset.f) && W()) { mood('jump', 700); say('Um instante, já abro para você…'); } }, true);
-  // pisca de tempos em tempos e passa as dicas sozinho enquanto a tela de entrada estiver aberta
+  document.addEventListener('focusout', e => { const w = W(); if (w && (e.target.id === 'pw' || e.target.id === 'sp')) { w.classList.remove('shy'); wave(1800); say('Pronto! Agora é só entrar.', 4000); } });
+  document.addEventListener('input', e => { const w = W(); if (!w || w.classList.contains('shy') || !/^(em|sn|se)$/.test(e.target.id)) return; const n = e.target.value.length, c = Math.min(1, n / 24), f = FR(), r = f ? f.getBoundingClientRect() : { width: 150, height: 190 }; post({ rv3dMouse: [r.width * (.1 + c * .8), r.height * 2.2, 150] }); look(-5 + c * 10, 4.5); });
+  document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-epi-click]')) { mood('jump', 700); wave(2600); nextTip(); } });
+  document.addEventListener('submit', e => { if (e.target.dataset && /^(login|signup)$/.test(e.target.dataset.f) && W()) { mood('jump', 700); wave(2600); say('Um instante, já abro para você…'); } }, true);
   setInterval(() => { const w = W(); if (w && !w.classList.contains('shy')) { w.classList.add('blink'); setTimeout(() => w.classList.remove('blink'), 160); } }, 3600);
   setInterval(() => { const w = W(); if (w && !w.classList.contains('no') && !document.activeElement.matches?.('input')) nextTip(); }, 12000);
 })();

@@ -2867,7 +2867,7 @@ window.I18N_DICT = {
 "Sem resposta": ["Sin respuesta", "", "No answer", "无人应答"],
 "Mensagem padrão de recusa": ["Mensaje predeterminado de rechazo", "", "Default decline message", "默认拒绝消息"],
 "Salvar mensagem": ["Guardar mensaje", "", "Save message", "保存消息"],
-"Olá! Eu sou o Epi, o mascote da m3d.pro. Bem-vindo ao Talk.M3D!": ["¡Hola! Soy Epi, la mascota de m3d.pro. ¡Bienvenido a Talk.M3D!", "", "Hi! I'm Epi, the m3d.pro mascot. Welcome to Talk.M3D!", "你好！我是 Epi，m3d.pro 的吉祥物。欢迎使用 Talk.M3D！"],
+"Olá! Eu sou o Secreto-Bot, o mascote do Talk.M3D. Bem-vindo!": ["¡Hola! Soy Secreto-Bot, la mascota de Talk.M3D. ¡Bienvenido!", "", "Hi! I'm Secreto-Bot, the Talk.M3D mascot. Welcome!", "你好！我是 Secreto-Bot，Talk.M3D 的吉祥物。欢迎！"],
 "O ponto verde ao lado do nome mostra quem está online agora.": ["El punto verde junto al nombre muestra quién está en línea ahora.", "", "The green dot next to a name shows who is online now.", "姓名旁的绿点表示谁当前在线。"],
 "Quando um médico está online e livre, você pode pedir uma teleconsulta na hora.": ["Cuando un médico está en línea y libre, puede pedir una teleconsulta al instante.", "", "When a doctor is online and free, you can request a teleconsultation right away.", "当医生在线且空闲时，您可以立即申请远程会诊。"],
 "A IA propõe rascunhos, mas quem decide é sempre o profissional.": ["La IA propone borradores, pero quien decide siempre es el profesional.", "", "AI suggests drafts, but the professional always decides.", "AI 提供草稿，但决定权始终在专业人员手中。"],
@@ -2879,7 +2879,7 @@ window.I18N_DICT = {
 "Isso! Digite seu usuário ou e-mail.": ["¡Eso! Escriba su usuario o correo.", "", "That's it! Type your username or email.", "对！请输入用户名或邮箱。"],
 "Pronto! Agora é só entrar.": ["¡Listo! Ahora solo entre.", "", "Done! Now just sign in.", "好了！现在登录即可。"],
 "Um instante, já abro para você…": ["Un momento, ya le abro…", "", "One moment, opening up for you…", "请稍等，马上为您打开…"],
-"Epi, o mascote: toque para ouvir uma dica": ["Epi, la mascota: toque para oír un consejo", "", "Epi, the mascot: tap for a tip", "Epi 吉祥物：点击听提示"],
+"Mascote Secreto-Bot: toque para ouvir uma dica": ["Mascota Secreto-Bot: toque para oír un consejo", "", "Secreto-Bot mascot: tap for a tip", "吉祥物 Secreto-Bot：点击听提示"],
 "Nenhuma movimentação ainda.": ["Aún no hay movimientos.", "", "No transactions yet.", "暂无交易。"],
 "Quanto custa cada recurso": ["Cuánto cuesta cada recurso", "", "What each feature costs", "各功能费用"]
 };

@@ -518,3 +518,9 @@ body:has(.app .rail) #langbar{display:none}
 .epi{animation:epif 4s ease-in-out infinite}@keyframes epif{50%{transform:translateY(-3px)}}}
 @media (prefers-reduced-motion:reduce){.epi,.epi *{animation:none!important;transition:none!important}}
 @media (max-width:380px){.epib0{flex-basis:108px}.epi{width:108px}.epib{font-size:12.5px}}
+
+/* Secreto-Bot 3D (iframe) + Epi 2D como reserva sem WebGL */
+.epib0{flex:0 0 150px!important;position:relative;height:190px}.epi3d{width:150px;height:190px;border:0;background:transparent;display:block;pointer-events:none;color-scheme:normal}
+.epifb{display:none;position:absolute;inset:0;align-items:center}.epiw.fb .epifb{display:flex}.epiw.fb .epi3d{display:none}.epiw.fb .epib0{height:auto}
+.epiw:not(.fb) .epi{animation:none}.epiw.jump:not(.fb) .epi3d{animation:epij .6s cubic-bezier(.3,1.6,.5,1)}
+@media (max-width:380px){.epib0{flex-basis:118px!important;height:150px}.epi3d{width:118px;height:150px}}
