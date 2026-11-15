@@ -638,13 +638,9 @@ body:has(.flagrow) #langbar{display:none}
 @keyframes bootp{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(95,224,255,0))}50%{transform:scale(1.12);filter:drop-shadow(0 0 10px rgba(95,224,255,.8))}}
 @media (prefers-reduced-motion:reduce){#boot .bn img{animation:none}#boot,#boot .bp i{transition:none}}
 
-/* dock de funcionalidades colado abaixo do título da janela aberta (discreto, centralizado, arrastável) */
-.tbdock{flex:none;display:flex;justify-content:center;position:relative;z-index:30;pointer-events:none;margin-bottom:8px}
-.tbdock .hdock{pointer-events:auto;margin:0;padding:3px 10px 4px;gap:2px;border-radius:0 0 16px 16px;background:var(--sf);border:1px solid var(--ln);border-top:0;box-shadow:0 5px 12px rgba(0,0,0,.1);-webkit-backdrop-filter:none;backdrop-filter:none;max-width:calc(100% - 24px);opacity:.94;transition:opacity .15s}
-.tbdock .hdock:hover,.tbdock .hdock:focus-within{opacity:1}
-.tbdock .happ .dki{width:32px;height:32px;border-radius:10px}.tbdock .happ .dki svg{width:19px;height:19px}
-.tbdock .htip{bottom:auto;top:calc(100% + 10px)}
-.tbdock .hdock.mvd{border-radius:16px;border-top:1px solid var(--ln);opacity:1;box-shadow:0 10px 26px rgba(0,0,0,.22)}
-.tbdock .hdock::before{content:"";position:absolute;top:-1px;left:50%;width:26px;height:3px;margin-left:-13px;border-radius:0 0 3px 3px;background:var(--ln)}
-@media(max-width:560px){.tbdock .hdock{overflow-x:auto;overflow-y:hidden}.tbdock .htip{display:none}}
-.tbdock:has(.hdock.mvd){margin:0;height:0}
+/* submenu da funcionalidade: caixa discreta colada abaixo do título, centralizada (arrastável; solta vira flutuante) */
+#rbar.att{border-top:0;border-radius:0 0 16px 16px;background:var(--sf);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 5px 12px rgba(0,0,0,.1);animation:none;opacity:.96;z-index:45}
+#rbar.att:hover,#rbar.att:focus-within{opacity:1}
+#rbar.att::before{content:"";position:absolute;top:-1px;left:50%;width:26px;height:3px;margin-left:-13px;border-radius:0 0 3px 3px;background:var(--ln)}
+#rbar.att .rt{top:calc(100% + 8px);bottom:auto}
+body.rbatt #app .chat>.dw{margin-top:36px}
