@@ -651,3 +651,4 @@ body.rbatt #app .chat>.dw{margin-top:36px}
 .tcm2{display:none;position:fixed;inset:0;z-index:310;background:rgba(15,25,35,.6);align-items:center;justify-content:center;padding:16px}
 /* Mascote em iframe: sem isto o tema escuro do sistema pinta um fundo branco opaco atrás dele (esquema de cores diferente do documento do mascote). */
 iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:normal;background:transparent!important}
+.hsep{flex:none;width:1px;align-self:stretch;margin:6px 4px;background:linear-gradient(transparent,rgba(120,140,160,.55),transparent)}
