@@ -30,7 +30,7 @@ let ws;
 function wsConnect() {
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
   ws.onopen = () => S.room && ws.send(JSON.stringify({ join: S.room.key }));
-  ws.onmessage = e => { const m = JSON.parse(e.data); if (S.room && m.key === S.room.key && !S.msgs.some(x => x.id === m.id)) { S.msgs.push({ id: m.id, sender_id: m.senderId, sender: m.sender, body: m.body, urgent: m.urgent, created_at: m.at }); if (S.view === 'chat') render(); } };
+  ws.onmessage = e => { const m = JSON.parse(e.data); if (m.ev) { document.dispatchEvent(new CustomEvent('m3d:ev', { detail: m })); return; } if (S.room && m.key === S.room.key && !S.msgs.some(x => x.id === m.id)) { S.msgs.push({ id: m.id, sender_id: m.senderId, sender: m.sender, body: m.body, urgent: m.urgent, created_at: m.at }); if (S.view === 'chat') render(); } };
   ws.onclose = () => { if (S.me) setTimeout(wsConnect, 3000); };
 }
 async function setRoom(r) { S.room = r; S.view = 'chat'; S.lo = 0; S.msgs = await api('/messages?key=' + encodeURIComponent(r.key)); if (ws && ws.readyState === 1) ws.send(JSON.stringify({ join: r.key })); }
@@ -187,7 +187,7 @@ const A = {
   tr: id => run(async () => { S.trn[id] = (await api(`/messages/${id}/translate?to=${window.I18N ? I18N.lang : (S.me.lang || 'pt')}`)).translated; render(); }),
   pinm: (id, el) => run(async () => { await api(`/messages/${id}/pin`, { m: 'PATCH', b: { pinned: el.dataset.q === '1' } }); S.msgs = await api('/messages?key=' + encodeURIComponent(S.room.key)); render(); }),
   call: () => S.room && S.room.peer && callWith(S.room.peer), callwith: id => callWith(id),
-  endcall: () => leave(), mute: () => { if (CALL.mic) CALL.mic.setEnabled(!CALL.mic.enabled); }, cam: () => { if (CALL.cam) CALL.cam.setEnabled(!CALL.cam.enabled); else toast('Sem câmera nesta chamada'); }, share: () => run(share),
+  endcall: () => leave(), mute: (p, el) => { if (CALL.mic) { CALL.mic.setEnabled(!CALL.mic.enabled); if (el && el.classList) el.classList.toggle('off', !CALL.mic.enabled); } }, cam: (p, el) => { if (CALL.cam) { CALL.cam.setEnabled(!CALL.cam.enabled); if (el && el.classList) el.classList.toggle('off', !CALL.cam.enabled); } else toast('Sem câmera nesta chamada'); }, share: () => run(share),
   rec: () => run(async () => { if (!S.me.ai_consent) { if (!confirm('Autorizo a transcrição do meu áudio por IA neste atendimento.')) return; await api('/me/consent', { m: 'PATCH', b: { aiConsent: true } }); S.me.ai_consent = true; } CALL.rec = !CALL.rec; $('#cmsg').textContent = CALL.rec ? 'Transcrição ativa (visível só ao médico).' : 'Transcrição pausada.'; recLoop(); }),
   gjoin: () => run(async () => { const t = await api('/video/guest', { m: 'POST', b: { token: location.pathname.split('/')[2] } }); await join(t); }),
   wk: p => run(async () => { S.wk += +p; S.sel = null; await loadWeek(); render(); }),

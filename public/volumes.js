@@ -5,7 +5,7 @@
   const ICON = '<path d="M4 5a2 2 0 012-2h11a2 2 0 012 2v16l-3-2-3 2-3-2-3 2z"/><path d="M8 8h7M8 12h5"/>';
   const isAdm = () => S.me && S.me.role === 'admin', isPac = () => S.me && S.me.role === 'paciente';
   const HOME = HOME_APPS.findIndex(a => a[0] === 'cfg');
-  HOME_APPS.splice(HOME < 0 ? HOME_APPS.length : HOME, 0, ['volumes', 'Volumes de casos', ICON, '#b08a2e', isAdm], ['privpesq', 'Privacidade e pesquisa', '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>', '#2f7d6d', isPac]);
+  HOME_APPS.splice(HOME < 0 ? HOME_APPS.length : HOME, 0, ['volumes', 'Relatórios de estudo de caso', ICON, '#b08a2e', isAdm], ['privpesq', 'Privacidade e pesquisa', '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>', '#2f7d6d', isPac]);
   HDESC.volumes = 'Transformar um caso (com consentimento e aval do comitê de ética) em volume de estudo de caso anonimizado';
   HDESC.privpesq = 'Sua escolha sobre o uso anonimizado dos seus dados em material científico';
   const TERMO = `<p>O <b>Talk.M3D</b> pode, <b>somente com a sua concordância</b>, usar informações do seu acompanhamento (consultas, registros, exames e evolução) na produção de <b>material científico e estudos de caso</b> relacionados ao seu caso clínico.</p>
@@ -41,7 +41,7 @@
     ${c.version ? `<div class="cd"><h3>${ES('Documento')} · v${c.version}</h3><p><a href="/api/volumes/${c.id}/document" target="_blank" rel="noopener">${ES('Abrir (imprimir / salvar PDF)')}</a> · <a href="/api/volumes/${c.id}/document?download=1">${ES('Baixar HTML')}</a> · <button data-a="vsend" ${g.ok ? '' : 'disabled'}>${ES('Enviar à plataforma de estudos de caso')}</button> <button class="dng" data-a="vsus">${ES('Suspender')}</button></p>${c.apiStatus ? `<p class="mu">${ES('Plataforma')}: ${E(c.apiStatus)}${c.apiRef ? ' · ' + E(c.apiRef) : ''} ${dt(c.apiSentAt)}</p>` : ''}${V.doc ? `<iframe sandbox title="${ES('Pré-visualização')}" srcdoc="${E(V.doc)}" style="width:100%;height:520px;border:1px solid var(--ln,#ccd);border-radius:8px;background:#fff"></iframe>` : ''}
       <h3>${ES('Lista CARE')}</h3><table><thead><tr><th>#</th><th>${ES('Item')}</th><th>${ES('Onde')}</th><th>${ES('Situação')}</th></tr></thead><tbody>${cl}</tbody></table><p class="mu">${ES('Versões')}: ${(c.versions || []).map(v => 'v' + v.version + ' ' + dt(v.created_at)).join(' · ')}</p></div>` : ''}`;
   }
-  CENTER.volumes = () => bar('Volumes de casos') + `<div class="cv">${V.cur ? detH() : listH()}</div>`;
+  CENTER.volumes = () => bar('Relatórios de estudo de caso') + `<div class="cv">${V.cur ? detH() : listH()}</div>`;
   const _v = A.view; A.view = p => p === 'volumes' ? run(async () => { S.view = 'volumes'; S.lo = 0; V.cur = null; render(); await load(); }) : p === 'privpesq' ? run(async () => { S.view = 'privpesq'; S.lo = 0; try { S.me = await api('/me'); } catch { /* segue */ } render(); }) : _v(p);
   document.addEventListener('input', e => { const k = e.target && e.target.dataset && e.target.dataset.vf; if (k && S.view === 'volumes') V.f[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; });
   document.addEventListener('change', e => { const k = e.target && e.target.dataset && e.target.dataset.vf; if (k && S.view === 'volumes') V.f[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; });

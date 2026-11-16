@@ -16,9 +16,9 @@ export default async function (app) {
   });
   app.delete('/api/admin/contact-rules/:kind', ADM, async (req, rep) => { const kind = z.enum(Object.keys(KINDS)).parse(req.params.kind); await q('delete from contact_rules where kind=$1', [kind]); await audit(req, 'grafo_contatos_padrao', 'settings', kind); return { ok: true }; });
   // Urgência: por padrão todo profissional atende; só deixa de atender quem indicar (nunca / só em períodos).
-  app.get('/api/me/urgency', { preHandler: app.role(...HEALTH) }, async req => { const [u] = await q('select urgency_mode mode,urgency_periods periods from users where id=$1', [req.user.sub]); return { ...u, openNow: urgencyOpen(u.mode, u.periods) }; });
+  app.get('/api/me/urgency', { preHandler: app.role(...HEALTH) }, async req => { const [u] = await q('select urgency_mode mode,urgency_periods periods,urgency_set "set" from users where id=$1', [req.user.sub]); return { ...u, openNow: urgencyOpen(u.mode, u.periods) }; });
   app.put('/api/me/urgency', { preHandler: app.role(...HEALTH) }, async req => {
     const b = z.object({ mode: z.enum(['sempre', 'nunca', 'periodos']), periods: z.array(z.any()).max(14).optional() }).parse(req.body), p = normPeriods(b.periods);
-    await q('update users set urgency_mode=$2,urgency_periods=$3 where id=$1', [req.user.sub, b.mode, JSON.stringify(p)]); await audit(req, 'urgencia_config', 'user', req.user.sub, { mode: b.mode }); return { ok: true, mode: b.mode, periods: p, openNow: urgencyOpen(b.mode, p) };
+    await q('update users set urgency_mode=$2,urgency_periods=$3,urgency_set=true where id=$1', [req.user.sub, b.mode, JSON.stringify(p)]); await audit(req, 'urgencia_config', 'user', req.user.sub, { mode: b.mode }); return { ok: true, mode: b.mode, periods: p, openNow: urgencyOpen(b.mode, p) };
   });
 }
