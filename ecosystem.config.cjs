@@ -1,0 +1,2 @@
+// PM2: reinício automático com espera (evita "errored" se o Postgres ainda estiver subindo após o boot do servidor).
+module.exports = { apps: [{ name: process.env.PM2_NOME || 'talk', script: 'src/server.js', cwd: __dirname, env: { TZ: process.env.TZ || 'America/Sao_Paulo', PORT: process.env.PORT || 3000 }, autorestart: true, restart_delay: 3000, exp_backoff_restart_delay: 200, max_restarts: 1000, min_uptime: '10s', kill_timeout: 8000, max_memory_restart: '700M' }] };

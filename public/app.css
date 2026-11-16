@@ -724,3 +724,5 @@ iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:no
 
 .rib .rgrp{display:inline-flex;align-items:center;gap:2px;padding:1px 4px;border:1px dashed color-mix(in srgb,var(--pc,#2481cc) 40%,var(--ln));border-radius:10px;background:color-mix(in srgb,var(--pc,#2481cc) 5%,transparent);position:relative}
 .rib .rgrp::before{content:attr(data-gl);position:absolute;top:-7px;left:8px;font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);background:var(--sf);padding:0 3px;line-height:1}
+.langrow{justify-content:center}.langrow .flagrow{position:static;transform:none;margin:0;justify-content:center;flex-wrap:wrap}
+.langrow .flagrow{gap:6px;flex-wrap:nowrap}.langrow .flb{width:38px;height:38px;flex:none}.langrow .flb svg,.langrow .flb img{width:24px;height:24px}
