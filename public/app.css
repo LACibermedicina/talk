@@ -648,3 +648,4 @@ body.rbatt #app .chat>.dw{margin-top:36px}
 .htip,.rb .rt{display:none!important}
 #tipx{position:fixed;z-index:400;max-width:260px;pointer-events:none;background:#16222e;color:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(3px);transition:opacity .15s,transform .15s;visibility:hidden}
 #tipx.on{opacity:1;transform:none;visibility:visible}#tipx b{display:block;font-weight:600}#tipx small{display:block;opacity:.85;margin-top:2px}#tipx small:empty{display:none}
+.tcm2{display:none;position:fixed;inset:0;z-index:310;background:rgba(15,25,35,.6);align-items:center;justify-content:center;padding:16px}

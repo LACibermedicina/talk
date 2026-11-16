@@ -38,7 +38,7 @@ app.setErrorHandler((e, req, rep) => {
   rep.code(c).send({ error: c < 500 || c === 503 ? e.message : 'erro interno' });
 });
 installBilling(app);
-for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta', 'equipes'])
+for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta', 'equipes', 'volumes'])
   await app.register((await import(`./routes/${m}.js`)).default);
 await app.register(stat, { root: new URL('../public/', import.meta.url).pathname, wildcard: false });
 app.setNotFoundHandler((req, rep) => req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/ws') ? rep.sendFile('index.html') : rep.code(404).send({ error: 'não encontrado' }));

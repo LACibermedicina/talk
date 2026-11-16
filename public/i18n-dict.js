@@ -2948,5 +2948,14 @@ window.I18N_DICT = {
 "profissional autônomo": ["profesional autónomo", "", "freelance professional", "自由职业专业人员"],
 "Chamada encerrada pelo administrador da equipe": ["Llamada finalizada por el administrador del equipo", "", "Call ended by the team administrator", "通话已被团队管理员结束"],
 "Criar equipe": ["Crear equipo", "", "Create team", "创建团队"],
-"Profissionais e pacientes disponíveis agora": ["Profesionales y pacientes disponibles ahora", "", "Professionals and patients available now", "当前可用的专业人员和患者"]
+"Profissionais e pacientes disponíveis agora": ["Profesionales y pacientes disponibles ahora", "", "Professionals and patients available now", "当前可用的专业人员和患者"],
+"Volumes de casos": ["Volúmenes de casos", "", "Case volumes", "病例卷"],
+"Privacidade e pesquisa": ["Privacidad e investigación", "", "Privacy and research", "隐私与研究"],
+"Concordo": ["Estoy de acuerdo", "", "I agree", "同意"],
+"Não concordo": ["No estoy de acuerdo", "", "I do not agree", "不同意"],
+"Criar volume": ["Crear volumen", "", "Create volume", "创建卷"],
+"Gerar com IA": ["Generar con IA", "", "Generate with AI", "用AI生成"],
+"Liberação": ["Liberación", "", "Clearance", "放行"],
+"Revogar minha concordância": ["Revocar mi consentimiento", "", "Withdraw my consent", "撤回我的同意"],
+"Enviar à plataforma de estudos de caso": ["Enviar a la plataforma de estudios de caso", "", "Send to the case-study platform", "发送到病例研究平台"]
 };

@@ -7,6 +7,7 @@ export const KEYS = {
   PROTOCOL_ORDER: /^(ministerio|sociedade|oms|personal|geral)(,(ministerio|sociedade|oms|personal|geral)){4}$/,
   SIGNUP_MODE: /^(off|approval|open)$/, AI_PROVIDERS: /^(gemini|openai|anthropic)(,(gemini|openai|anthropic)){0,2}$/, STT_PROVIDERS: /^(openai|gemini)(,(openai|gemini))?$/,
   BILLING_ENFORCE: /^(true|false)$/, AMB_MAX_GROUPS: /^\d{1,3}$/, AMB_MAX_TOKENS: /^\d{1,4}$/, AMB_MAX_USES: /^\d{1,4}$/, AMB_MAX_CREDITS: /^\d{1,6}$/, AMB_MAX_TRIAL_DAYS: /^\d{1,3}$/, AMB_REWARD: /^\d{1,6}$/, AMB_PLAN: /^[a-z][a-z0-9_-]{2,29}$/,
+  STUDY_API_URL: /^https:\/\/[\w.-]+(:\d+)?(\/[\w./-]*)?$/, STUDY_API_KEY: /^[\w.~+\/=-]{16,300}$/,
   PAYPAL_ENV: /^(sandbox|live)$/, PAYPAL_CLIENT_ID: /^[\w-]{10,200}$/, PAYPAL_CLIENT_SECRET: /^[\w-]{10,200}$/,
   TWILIO_SID: /^AC[0-9a-f]{32}$/i, TWILIO_TOKEN: /^[0-9a-f]{32}$/i, TWILIO_FROM: /^\+?[0-9]{8,15}$/
 };
@@ -17,5 +18,5 @@ export async function saveSettings(obj) {
 }
 export async function maskedSettings() {
   const rows = await q('select key,updated_at from app_settings where key<>$1', ['setup_done']), set = Object.fromEntries(rows.map(r => [r.key, r.updated_at]));
-  return Object.keys(KEYS).map(k => ({ key: k, configurado: !!(process.env[k]), origem: set[k] ? 'painel' : process.env[k] ? 'ambiente' : null, fim: process.env[k] && !/^(PROTOCOL_ORDER|AI_PROVIDERS|STT_PROVIDERS|PAYPAL_ENV|OPENAI_BASE_URL|SIGNUP_MODE|BILLING_ENFORCE|AMB_[A-Z_]+)$/.test(k) ? '…' + process.env[k].slice(-4) : process.env[k] || null }));
+  return Object.keys(KEYS).map(k => ({ key: k, configurado: !!(process.env[k]), origem: set[k] ? 'painel' : process.env[k] ? 'ambiente' : null, fim: process.env[k] && !/^(PROTOCOL_ORDER|AI_PROVIDERS|STT_PROVIDERS|PAYPAL_ENV|OPENAI_BASE_URL|STUDY_API_URL|SIGNUP_MODE|BILLING_ENFORCE|AMB_[A-Z_]+)$/.test(k) ? '…' + process.env[k].slice(-4) : process.env[k] || null }));
 }
