@@ -40,6 +40,13 @@ export default async function (app) {
     if (!a || a.patient_id !== req.user.sub) return rep.code(404).send({ error: 'não encontrado' });
     await q('insert into consult_state(appointment_id,patient_consent) values($1,$2) on conflict(appointment_id) do update set patient_consent=$2', [id, consent]); await audit(req, consent ? 'consent_transcricao' : 'recusa_transcricao', 'appointment', id); return { ok: true };
   });
+  // O profissional ativa/desativa o consentimento durante a chamada, em nome do paciente que o expressou (fica registrado quem e quando). Sem consentimento: o áudio do paciente deixa de ser transcrito.
+  app.put('/api/consults/:id/consent-pro', { preHandler: app.auth }, async (req, rep) => {
+    const id = uuid.parse(req.params.id), { consent } = z.object({ consent: z.boolean() }).parse(req.body), a = await apptOf(id, req.user);
+    if (!a || req.user.role === 'paciente' || a.professional_id !== req.user.sub) return rep.code(404).send({ error: 'não encontrado' });
+    await q('insert into consult_state(appointment_id,patient_consent,consent_by,consent_at) values($1,$2,$3,now()) on conflict(appointment_id) do update set patient_consent=$2,consent_by=$3,consent_at=now()', [id, consent, req.user.sub]);
+    await audit(req, consent ? 'consentimento_registrado_profissional' : 'nao_consentimento_registrado_profissional', 'appointment', id); return { ok: true, consent };
+  });
   /* --- ao vivo: novas falas + alertas imediatos (sem IA) --- */
   app.get('/api/consults/:id/live', { ...PRO, config: { rateLimit: { max: 40, timeWindow: '1 minute' } } }, async (req, rep) => {
     const id = uuid.parse(req.params.id), a = await myAppt(id, req.user); if (!a) return rep.code(404).send({ error: 'não encontrado' });

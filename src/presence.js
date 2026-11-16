@@ -18,3 +18,5 @@ export async function loadStatus(id) { if (st.has(id)) return; try { const { q }
 const socks = new Map();
 export function track(id, sock) { if (!socks.has(id)) socks.set(id, new Set()); socks.get(id).add(sock); sock.on('close', () => { const s = socks.get(id); if (s) { s.delete(sock); if (!s.size) socks.delete(id); } }); }
 export function kick(id) { for (const s of [...(socks.get(id) || [])]) { try { s.close(1008, 'conta inativada'); } catch { /* já fechado */ } } socks.delete(id); }
+// Empurra um aviso em tempo real a quem está conectado (atualização automática das telas). Sem conexão aberta, o app atualiza no próximo batimento.
+export function pushTo(ids, msg) { const s = JSON.stringify(msg); let n = 0; for (const id of new Set(ids || [])) for (const k of socks.get(id) || []) { try { if (k.readyState === 1) { k.send(s); n++; } } catch { /* conexão caiu */ } } return n; }

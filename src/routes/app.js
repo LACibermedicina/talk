@@ -8,8 +8,10 @@ import { logAct } from '../activity.js';
 import { CARE, HEALTH, STAFF } from '../roles.js';
 import { withOnline } from '../presence.js';
 const PRO = CARE, uuid = z.string().uuid(), list = z.array(z.string().max(80)).max(30);
+import { canContact } from '../contactLogic.js';
+import { loadRules } from './contatos.js';
 export default async function (app) {
-  app.get('/api/contacts', { preHandler: app.auth }, async req => withOnline(await contacts(req)));
+  app.get('/api/contacts', { preHandler: app.auth }, async req => { const rules = await loadRules(); return withOnline((await contacts(req)).filter(x => canContact(rules, 'chat', req.user.role, x.role))); });
   const contacts = req => {
     const u = req.user;
     if (u.role === 'paciente') return q(`select x.id,x.name,x.role,x.cargo from users x where x.active and (x.role='recepcao' or x.id in(select professional_id from care_team where patient_id=$1)) order by x.name`, [u.sub]);

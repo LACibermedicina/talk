@@ -10,7 +10,7 @@ import { q } from './db.js';
 import { startJobs } from './jobs.js';
 import { migrate } from './migrateLib.js';
 import { loadSettings } from './settings.js';
-import { touch } from './presence.js';
+import { touch, pushTo } from './presence.js';
 import { initSetup } from './routes/setup.js';
 import { installBilling } from './billing.js';
 import { seedTest, testOn, TEST_USERS } from './testMode.js';
@@ -24,6 +24,16 @@ await app.register(rate, { max: 300, timeWindow: '1 minute' });
 await app.register(ws);
 await app.register(multipart, { limits: { fileSize: 10e6, files: 3 } });
 app.addHook('onRequest', async (req, rep) => { if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) { const o = req.headers.origin; if (o && o !== process.env.APP_ORIGIN) return rep.code(403).send({ error: 'origem não permitida' }); } });
+// Atualização automática: depois de uma alteração bem-sucedida em agenda/vínculo/tarefas/documentos, avisa em tempo real quem é afetado (paciente e profissional).
+app.addHook('onResponse', async (req, rep) => {
+  try {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method) || rep.statusCode >= 400 || !req.user || !/^\/api\/(agenda|patients|assignments|documents|tasks|care|users)\b/.test(req.url)) return;
+    const b = req.body || {}, p = req.params || {}, ids = new Set([b.patientId, b.professionalId, b.patient_id].filter(Boolean));
+    if (/^\/api\/patients\//.test(req.url) && p.id) ids.add(p.id);
+    if (/^\/api\/agenda\/[0-9a-f-]{36}/.test(req.url) && p.id) for (const a of await q('select patient_id,professional_id from appointments where id=$1', [p.id])) { ids.add(a.patient_id); ids.add(a.professional_id); }
+    ids.delete(req.user.sub); if (ids.size) pushTo([...ids], { ev: 'refresh', by: req.user.name || null });
+  } catch { /* o aviso é opcional */ }
+});
 app.decorate('auth', async (req, rep) => {
   try { await req.jwtVerify(); } catch { return rep.code(401).send({ error: 'não autenticado' }); }
   if (!req.user.role || !(await q('select 1 from users where id=$1 and active and (sessions_valid_after is null or sessions_valid_after < to_timestamp($2 + 1))', [req.user.sub, req.user.iat || 0])).length) return rep.code(401).send({ error: 'sessão inválida' });
@@ -38,7 +48,7 @@ app.setErrorHandler((e, req, rep) => {
   rep.code(c).send({ error: c < 500 || c === 503 ? e.message : 'erro interno' });
 });
 installBilling(app);
-for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta', 'equipes', 'volumes'])
+for (const m of ['auth', 'agenda', 'chat', 'video', 'finance', 'tasks', 'clinical', 'documents', 'paypal', 'app', 'context', 'followup', 'public', 'signup', 'setup', 'integracoes', 'i18n', 'caso', 'assistente', 'consulta', 'familia', 'billing', 'admin', 'teleconsulta', 'equipes', 'volumes', 'contatos'])
   await app.register((await import(`./routes/${m}.js`)).default);
 await app.register(stat, { root: new URL('../public/', import.meta.url).pathname, wildcard: false });
 app.setNotFoundHandler((req, rep) => req.method === 'GET' && !req.url.startsWith('/api') && !req.url.startsWith('/ws') ? rep.sendFile('index.html') : rep.code(404).send({ error: 'não encontrado' }));
