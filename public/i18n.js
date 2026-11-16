@@ -78,7 +78,7 @@
   };
   const flag = c => `<svg class="fl" viewBox="0 0 30 20" width="22" height="15" aria-hidden="true" focusable="false">${FLG[c] || ''}</svg>`;
   const selectHTML = () => { const cur = LANGS.find(x => x[0] === lang) || LANGS[0]; return `<div class="lgw" translate="no"><button type="button" class="lgb" data-lg="t" aria-haspopup="listbox" aria-expanded="false" aria-label="Idioma / Language / Idioma / Ñe'ẽ / 语言" lang="${cur[2]}">${flag(cur[0])}<span>${cur[1]}</span><i aria-hidden="true">▾</i></button><ul class="lgm" role="listbox" hidden>${LANGS.map(l => `<li role="presentation"><button type="button" role="option" data-lg="${l[0]}" lang="${l[2]}" aria-selected="${l[0] === lang}">${flag(l[0])}<span>${l[1]}</span></button></li>`).join('')}</ul></div>`; };
-  const flagsHTML = () => `<div class="flagrow" translate="no" role="group" aria-label="Idioma / Language / Idioma / Ñe'ẽ / 语言">${LANGS.map(l => `<button type="button" class="flb" data-lg="${l[0]}" lang="${l[2]}" title="${l[1]}" aria-label="${l[1]}" aria-pressed="${l[0] === lang}">${flag(l[0])}</button>`).join('')}</div>`;
+  const flagsHTML = () => `<div class="flagrow" translate="no" role="group" aria-label="Idioma / Language / Idioma / Ñe'ẽ / 语言">${LANGS.map(l => `<button type="button" class="flb" data-lg="${l[0]}" lang="${l[2]}" data-n="${l[1]}" aria-label="${l[1]}" aria-pressed="${l[0] === lang}">${flag(l[0])}</button>`).join('')}</div>`;
   const closeLg = () => document.querySelectorAll('.lgm').forEach(m => { m.hidden = true; const b = m.parentNode.querySelector('.lgb'); if (b) b.setAttribute('aria-expanded', 'false'); });
   function ui() {
     const bar = document.createElement('div'); bar.id = 'langbar'; bar.setAttribute('translate', 'no');

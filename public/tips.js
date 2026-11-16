@@ -48,7 +48,7 @@
   }
   function hide() { clearTimeout(timer1); clearTimeout(timer2); cur = null; if (tip) tip.className = ''; }
   function start(t) {
-    if (t === cur) return; hide(); if (t.closest('.hpop') || t.classList.contains('hgb')) return; const i = info(t); if (!i.label) return; cur = t;
+    if (t === cur) return; hide(); if (t.closest('.hpop,.flagrow') || t.classList.contains('hgb')) return; const i = info(t); if (!i.label) return; cur = t;
     const rb = t.classList.contains('rb'); timer1 = setTimeout(() => { if (cur !== t || !t.isConnected) return; const x = el(); x.querySelector('b').textContent = i.label; x.querySelector('small').textContent = ''; x.className = 'on'; place(t); }, rb ? 250 : SHORT);
     if (i.d) timer2 = setTimeout(() => { if (cur !== t || !t.isConnected) return; const x = el(); x.querySelector('small').textContent = T(i.d); x.className = 'on lg'; place(t); }, rb ? 800 : LONG);
   }

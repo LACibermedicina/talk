@@ -704,3 +704,20 @@ iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:no
 .hpi{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:12px;cursor:pointer;color:var(--ink);min-width:178px}.hpi:hover,.hpi:focus-visible{background:var(--ac2)}.hpi:focus-visible{outline:2px solid var(--ac)}.hpi.on{box-shadow:inset 0 0 0 1.5px var(--pc)}
 .hpi .dki{flex:none;width:46px;height:46px;border-radius:13px}.hpt{display:flex;flex-direction:column;min-width:0;line-height:1.2}.hpt b{font-size:13px}.hpt small{font-size:11px;color:var(--mu)}
 @media(max-width:560px){.hdock{overflow:visible}.hpop{max-width:94vw}.hpop .hpg{grid-template-columns:1fr}}
+
+/* Bandeiras estilo animação 3D: bolhas brilhantes; o nome do idioma só aparece depois de passar o mouse */
+.flb{width:50px;height:50px;border-radius:18px;position:relative;overflow:visible;background:radial-gradient(circle at 35% 25%,#fff 0,rgba(255,255,255,.78) 45%,rgba(205,228,248,.7) 100%);border:2.5px solid #fff;box-shadow:0 5px 12px rgba(25,60,110,.28),inset 0 -4px 7px rgba(60,120,190,.22),inset 0 2px 3px #fff;transition:transform .25s cubic-bezier(.3,1.7,.5,1),box-shadow .2s}
+.flb::before{content:"";position:absolute;left:8px;top:4px;width:22px;height:9px;border-radius:50%;background:linear-gradient(rgba(255,255,255,.95),rgba(255,255,255,0));transform:rotate(-12deg);pointer-events:none;z-index:2}
+.flb .fl{width:34px;height:23px;border-radius:7px;box-shadow:0 2px 4px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,255,255,.35);filter:saturate(1.15) contrast(1.03);transform-origin:20% 50%;transition:transform .3s;position:relative}
+.flb .fl::after{content:""}
+.flb:hover,.flb:focus-visible{transform:translateY(-4px) scale(1.14);box-shadow:0 11px 18px rgba(25,60,110,.32),inset 0 -4px 7px rgba(60,120,190,.22),inset 0 2px 3px #fff}
+.flb:hover .fl,.flb:focus-visible .fl{animation:flwave 1s ease-in-out infinite}
+@keyframes flwave{0%,100%{transform:perspective(70px) rotateY(0) skewY(0)}25%{transform:perspective(70px) rotateY(-16deg) skewY(-4deg)}75%{transform:perspective(70px) rotateY(14deg) skewY(4deg)}}
+.flb:active{transform:translateY(1px) scale(.92,1.06)}
+.flb[aria-pressed="true"]{border-color:#7cc1ff;box-shadow:0 0 0 3px rgba(80,160,255,.45),0 6px 14px rgba(25,60,110,.3),inset 0 -4px 7px rgba(60,120,190,.22),inset 0 2px 3px #fff;animation:flhop 3.2s ease-in-out infinite}
+@keyframes flhop{0%,88%,100%{transform:none}92%{transform:translateY(-4px)}96%{transform:translateY(0) scale(1.04,.96)}}
+.flb::after{content:attr(data-n);position:absolute;top:calc(100% + 9px);left:50%;transform:translate(-50%,-6px) scale(.7);transform-origin:50% 0;white-space:nowrap;background:#16304f;color:#fff;font:600 12.5px/1 Inter,system-ui,sans-serif;padding:7px 11px;border-radius:12px;box-shadow:0 6px 14px rgba(0,0,0,.3);opacity:0;visibility:hidden;pointer-events:none;z-index:20;transition:opacity .15s,transform .25s cubic-bezier(.3,1.8,.5,1),visibility 0s .15s}
+.flb:hover::after,.flb:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);transition-delay:.35s}
+@media (prefers-reduced-motion:reduce){.flb,.flb .fl,.flb[aria-pressed="true"]{animation:none!important;transition:none}}
+#imv .flb{width:50px;height:50px;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.9),rgba(190,225,255,.45));border-color:rgba(255,255,255,.85)}
+.flb[aria-pressed="true"]:hover,.flb[aria-pressed="true"]:focus-visible{animation:none}
