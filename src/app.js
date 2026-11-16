@@ -26,7 +26,7 @@ await app.register(multipart, { limits: { fileSize: 10e6, files: 3 } });
 app.addHook('onRequest', async (req, rep) => { if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) { const o = req.headers.origin; if (o && o !== process.env.APP_ORIGIN) return rep.code(403).send({ error: 'origem não permitida' }); } });
 app.decorate('auth', async (req, rep) => {
   try { await req.jwtVerify(); } catch { return rep.code(401).send({ error: 'não autenticado' }); }
-  if (!req.user.role || !(await q('select 1 from users where id=$1 and active and (sessions_valid_after is null or sessions_valid_after < to_timestamp($2))', [req.user.sub, req.user.iat || 0])).length) return rep.code(401).send({ error: 'sessão inválida' });
+  if (!req.user.role || !(await q('select 1 from users where id=$1 and active and (sessions_valid_after is null or sessions_valid_after < to_timestamp($2 + 1))', [req.user.sub, req.user.iat || 0])).length) return rep.code(401).send({ error: 'sessão inválida' });
   touch(req.user.sub);
   if (req.user.mc && !['/api/me', '/api/me/password', '/api/logout'].includes(req.url.split('?')[0])) return rep.code(403).send({ error: 'Troque a senha para continuar', mustChange: true });
 });

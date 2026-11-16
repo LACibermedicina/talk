@@ -39,7 +39,7 @@ export default async function (app) {
   app.post('/api/users/:id/reset-password', A, async (req, rep) => {
     const id = uuid.parse(req.params.id), [t] = await q('select is_root from users where id=$1', [id]); if (!t) return rep.code(404).send({ error: 'Usuário não encontrado' });
     if (t.is_root && id !== req.user.sub) return rep.code(403).send({ error: 'Somente o próprio root redefine a senha do root' });
-    const pw = randomBytes(12).toString('base64url'); await q('update users set pw_hash=$2,must_change=true,failed_logins=0,locked_until=null,sessions_valid_after=now(),pw_changed_at=now() where id=$1', [id, await argon2.hash(pw)]);
+    const pw = randomBytes(12).toString('base64url'); await q('update users set pw_hash=$2,must_change=true,failed_logins=0,locked_until=null,sessions_valid_after=now()-make_interval(secs=>2),pw_changed_at=now() where id=$1', [id, await argon2.hash(pw)]);
     await q("insert into credential_events(user_id,kind,ip,by_user) values($1,'senha_redefinida',$2,$3)", [id, req.ip, req.user.sub]); await audit(req, 'redefinir_senha', 'user', id); return { tempPassword: pw };
   });
   app.post('/api/users/:id/unlock', A, async (req) => { const id = uuid.parse(req.params.id); await q('update users set failed_logins=0,locked_until=null where id=$1', [id]); await q("insert into credential_events(user_id,kind,ip,by_user) values($1,'desbloqueio',$2,$3)", [id, req.ip, req.user.sub]); await audit(req, 'desbloquear', 'user', id); return { ok: true }; });
