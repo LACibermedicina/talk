@@ -645,3 +645,6 @@ body:has(.flagrow) #langbar{display:none}
 #rbar.att .rt{top:calc(100% + 8px);bottom:auto}
 body.rbatt #app .chat>.dw{margin-top:36px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tch{margin:12px 0 4px;font-size:13px;opacity:.75}
+.htip,.rb .rt{display:none!important}
+#tipx{position:fixed;z-index:400;max-width:260px;pointer-events:none;background:#16222e;color:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;transform:translateY(3px);transition:opacity .15s,transform .15s;visibility:hidden}
+#tipx.on{opacity:1;transform:none;visibility:visible}#tipx b{display:block;font-weight:600}#tipx small{display:block;opacity:.85;margin-top:2px}#tipx small:empty{display:none}
