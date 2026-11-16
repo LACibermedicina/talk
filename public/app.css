@@ -652,3 +652,39 @@ body.rbatt #app .chat>.dw{margin-top:36px}
 /* Mascote em iframe: sem isto o tema escuro do sistema pinta um fundo branco opaco atrás dele (esquema de cores diferente do documento do mascote). */
 iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:normal;background:transparent!important}
 .hsep{flex:none;width:1px;align-self:stretch;margin:6px 4px;background:linear-gradient(transparent,rgba(120,140,160,.55),transparent)}
+/* Ícones ilustrados animados (icones.js) */
+.dki.px,.happ .dki.px{overflow:visible;padding:0;background:radial-gradient(circle at 50% 28%,color-mix(in srgb,var(--pc) 14%,#fff) 0,color-mix(in srgb,var(--pc) 34%,#fff) 100%);box-shadow:0 3px 9px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.8)}
+.dki.px::after{display:none}.dki.px svg{width:42px;height:42px;overflow:visible}
+.pxi{display:block;animation:pxf 3.6s ease-in-out infinite}@keyframes pxf{50%{transform:translateY(-1.6px)}}
+.pxi .ey{transform-box:fill-box;transform-origin:center;animation:pxb 5.5s infinite}@keyframes pxb{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.pxi :is(.r1,.r2,.cam,.rec,.wv,.c1,.c2,.tp,.p1,.p2,.p3,.n1,.n2,.n3,.n4,.cd,.bg,.bn,.co,.cn,.pg,.spk,.sp,.lp,.gr,.sdd,.rs,.sd,.cd){transform-box:fill-box;transform-origin:center}
+.pxi :is(.r1,.r2){transform-origin:50% 100%}
+.pxi :is(.hm,.hh){transform-box:view-box;transform-origin:34px 33px}.pxi :is(.pn,.bl){transform-box:view-box;transform-origin:32px 9px}
+.pxi .sp{animation:pxt 2.8s ease-in-out infinite}@keyframes pxt{50%{transform:scale(.55);opacity:.6}}
+.pxi .c1,.pxi .c2{stroke-dasharray:12;stroke-dashoffset:0}
+.happ:hover .pxi,.happ:focus-visible .pxi{animation-duration:1.4s}
+.happ:hover .pxi .sd{animation:pxs .7s ease-in-out infinite}@keyframes pxs{50%{transform:scale(.82);opacity:.1}}
+.happ:hover .pxi :is(.r1,.r2){animation:pxw .7s ease-in-out}.happ:hover .pxi .r2{animation-delay:.12s}@keyframes pxw{25%{transform:rotate(-14deg) translateY(-2px)}60%{transform:rotate(12deg)}100%{transform:none}}
+.happ:hover .pxi .cam{animation:pxk .5s ease-in-out 2}@keyframes pxk{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.happ:hover .pxi .rec{animation:pxo .6s steps(2) infinite}@keyframes pxo{50%{opacity:.15}}
+.happ:hover .pxi .wv{animation:pxv 1s ease-in-out infinite}@keyframes pxv{50%{transform:scale(1.15);opacity:.5}}
+.happ:hover .pxi .c1{animation:pxd .5s ease-out}.happ:hover .pxi .c2{animation:pxd .5s ease-out .25s both}@keyframes pxd{from{stroke-dashoffset:12}to{stroke-dashoffset:0}}
+.happ:hover .pxi .tp{animation:pxl .8s ease-in-out}@keyframes pxl{40%{transform:translateY(-7px) rotate(-6deg)}}
+.happ:hover .pxi :is(.p1,.p2,.p3){animation:pxj .6s ease-in-out}.happ:hover .pxi .p2{animation-delay:.1s}.happ:hover .pxi .p3{animation-delay:.2s}@keyframes pxj{40%{transform:translateY(-6px)}}
+.happ:hover .pxi :is(.n1,.n2,.n3,.n4){animation:pxp .7s ease-in-out}.happ:hover .pxi .n2{animation-delay:.1s}.happ:hover .pxi .n3{animation-delay:.2s}.happ:hover .pxi .n4{animation-delay:.3s}@keyframes pxp{50%{transform:scale(1.35)}}
+.happ:hover .pxi .ln{animation:pxdash .8s linear infinite}@keyframes pxdash{to{stroke-dashoffset:-14}}
+.happ:hover .pxi .hm{animation:pxr 2.4s linear infinite}.happ:hover .pxi .hh{animation:pxr 8s linear infinite}@keyframes pxr{to{transform:rotate(360deg)}}
+.happ:hover .pxi .cd{animation:pxc .7s ease-in-out}@keyframes pxc{40%{transform:rotate(-6deg) translateY(-3px)}75%{transform:rotate(3deg)}}
+.happ:hover .pxi .pn{animation:pxw .8s ease-in-out}
+.happ:hover .pxi .bl{animation:pxs2 .9s ease-in-out}@keyframes pxs2{15%{transform:rotate(18deg)}35%{transform:rotate(-16deg)}55%{transform:rotate(10deg)}75%{transform:rotate(-6deg)}100%{transform:none}}
+.happ:hover .pxi .bg{animation:pxg .5s cubic-bezier(.3,1.8,.5,1) infinite alternate}@keyframes pxg{to{transform:scale(1.3)}}
+.happ:hover .pxi .bn{animation:pxu .7s ease-in-out}@keyframes pxu{45%{transform:translateY(-8px) rotate(-12deg)}}
+.happ:hover .pxi .co{animation:pxsp .9s ease-in-out}@keyframes pxsp{50%{transform:scaleX(.08)}}
+.happ:hover .pxi .cn{animation:pxdrop 1s ease-in infinite}@keyframes pxdrop{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}80%{transform:translateY(16px);opacity:1}100%{transform:translateY(18px);opacity:0}}
+.happ:hover .pxi .pg{animation:pxplug .8s ease-in-out}@keyframes pxplug{30%{transform:translate(-4px,2px)}60%{transform:translate(3px,-2px)}}
+.happ:hover .pxi .spk{animation:pxt .5s ease-in-out infinite}
+.happ:hover .pxi .lp{animation:pxlp 1.4s ease-in-out infinite}@keyframes pxlp{25%{transform:translate(-9px,-6px)}60%{transform:translate(-3px,3px)}}
+.happ:hover .pxi .gr{animation:pxr 2.2s linear infinite}
+.happ:hover .pxi .sdd{animation:pxpu .8s ease-in-out infinite}@keyframes pxpu{50%{transform:scale(1.1)}}
+.happ:hover .pxi .rs{animation:pxr 1.2s linear infinite}
+@media (prefers-reduced-motion:reduce){.pxi,.pxi *{animation:none!important}}
