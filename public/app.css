@@ -721,3 +721,6 @@ iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:no
 @media (prefers-reduced-motion:reduce){.flb,.flb .fl,.flb[aria-pressed="true"]{animation:none!important;transition:none}}
 #imv .flb{width:50px;height:50px;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.9),rgba(190,225,255,.45));border-color:rgba(255,255,255,.85)}
 .flb[aria-pressed="true"]:hover,.flb[aria-pressed="true"]:focus-visible{animation:none}
+
+.rib .rgrp{display:inline-flex;align-items:center;gap:2px;padding:1px 4px;border:1px dashed color-mix(in srgb,var(--pc,#2481cc) 40%,var(--ln));border-radius:10px;background:color-mix(in srgb,var(--pc,#2481cc) 5%,transparent);position:relative}
+.rib .rgrp::before{content:attr(data-gl);position:absolute;top:-7px;left:8px;font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);background:var(--sf);padding:0 3px;line-height:1}
