@@ -662,29 +662,45 @@ iframe[src*="mascote.html"],#boot iframe,#imv .bot iframe,.epi3d{color-scheme:no
 .pxi :is(.hm,.hh){transform-box:view-box;transform-origin:34px 33px}.pxi :is(.pn,.bl){transform-box:view-box;transform-origin:32px 9px}
 .pxi .sp{animation:pxt 2.8s ease-in-out infinite}@keyframes pxt{50%{transform:scale(.55);opacity:.6}}
 .pxi .c1,.pxi .c2{stroke-dasharray:12;stroke-dashoffset:0}
-.happ:hover .pxi,.happ:focus-visible .pxi{animation-duration:1.4s}
-.happ:hover .pxi .sd{animation:pxs .7s ease-in-out infinite}@keyframes pxs{50%{transform:scale(.82);opacity:.1}}
-.happ:hover .pxi :is(.r1,.r2){animation:pxw .7s ease-in-out}.happ:hover .pxi .r2{animation-delay:.12s}@keyframes pxw{25%{transform:rotate(-14deg) translateY(-2px)}60%{transform:rotate(12deg)}100%{transform:none}}
-.happ:hover .pxi .cam{animation:pxk .5s ease-in-out 2}@keyframes pxk{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
-.happ:hover .pxi .rec{animation:pxo .6s steps(2) infinite}@keyframes pxo{50%{opacity:.15}}
-.happ:hover .pxi .wv{animation:pxv 1s ease-in-out infinite}@keyframes pxv{50%{transform:scale(1.15);opacity:.5}}
-.happ:hover .pxi .c1{animation:pxd .5s ease-out}.happ:hover .pxi .c2{animation:pxd .5s ease-out .25s both}@keyframes pxd{from{stroke-dashoffset:12}to{stroke-dashoffset:0}}
-.happ:hover .pxi .tp{animation:pxl .8s ease-in-out}@keyframes pxl{40%{transform:translateY(-7px) rotate(-6deg)}}
-.happ:hover .pxi :is(.p1,.p2,.p3){animation:pxj .6s ease-in-out}.happ:hover .pxi .p2{animation-delay:.1s}.happ:hover .pxi .p3{animation-delay:.2s}@keyframes pxj{40%{transform:translateY(-6px)}}
-.happ:hover .pxi :is(.n1,.n2,.n3,.n4){animation:pxp .7s ease-in-out}.happ:hover .pxi .n2{animation-delay:.1s}.happ:hover .pxi .n3{animation-delay:.2s}.happ:hover .pxi .n4{animation-delay:.3s}@keyframes pxp{50%{transform:scale(1.35)}}
-.happ:hover .pxi .ln{animation:pxdash .8s linear infinite}@keyframes pxdash{to{stroke-dashoffset:-14}}
-.happ:hover .pxi .hm{animation:pxr 2.4s linear infinite}.happ:hover .pxi .hh{animation:pxr 8s linear infinite}@keyframes pxr{to{transform:rotate(360deg)}}
-.happ:hover .pxi .cd{animation:pxc .7s ease-in-out}@keyframes pxc{40%{transform:rotate(-6deg) translateY(-3px)}75%{transform:rotate(3deg)}}
-.happ:hover .pxi .pn{animation:pxw .8s ease-in-out}
-.happ:hover .pxi .bl{animation:pxs2 .9s ease-in-out}@keyframes pxs2{15%{transform:rotate(18deg)}35%{transform:rotate(-16deg)}55%{transform:rotate(10deg)}75%{transform:rotate(-6deg)}100%{transform:none}}
-.happ:hover .pxi .bg{animation:pxg .5s cubic-bezier(.3,1.8,.5,1) infinite alternate}@keyframes pxg{to{transform:scale(1.3)}}
-.happ:hover .pxi .bn{animation:pxu .7s ease-in-out}@keyframes pxu{45%{transform:translateY(-8px) rotate(-12deg)}}
-.happ:hover .pxi .co{animation:pxsp .9s ease-in-out}@keyframes pxsp{50%{transform:scaleX(.08)}}
-.happ:hover .pxi .cn{animation:pxdrop 1s ease-in infinite}@keyframes pxdrop{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}80%{transform:translateY(16px);opacity:1}100%{transform:translateY(18px);opacity:0}}
-.happ:hover .pxi .pg{animation:pxplug .8s ease-in-out}@keyframes pxplug{30%{transform:translate(-4px,2px)}60%{transform:translate(3px,-2px)}}
-.happ:hover .pxi .spk{animation:pxt .5s ease-in-out infinite}
-.happ:hover .pxi .lp{animation:pxlp 1.4s ease-in-out infinite}@keyframes pxlp{25%{transform:translate(-9px,-6px)}60%{transform:translate(-3px,3px)}}
-.happ:hover .pxi .gr{animation:pxr 2.2s linear infinite}
-.happ:hover .pxi .sdd{animation:pxpu .8s ease-in-out infinite}@keyframes pxpu{50%{transform:scale(1.1)}}
-.happ:hover .pxi .rs{animation:pxr 1.2s linear infinite}
+:is(.happ,.hpi):hover .pxi,.happ:focus-visible .pxi{animation-duration:1.4s}
+:is(.happ,.hpi):hover .pxi .sd{animation:pxs .7s ease-in-out infinite}@keyframes pxs{50%{transform:scale(.82);opacity:.1}}
+:is(.happ,.hpi):hover .pxi :is(.r1,.r2){animation:pxw .7s ease-in-out}:is(.happ,.hpi):hover .pxi .r2{animation-delay:.12s}@keyframes pxw{25%{transform:rotate(-14deg) translateY(-2px)}60%{transform:rotate(12deg)}100%{transform:none}}
+:is(.happ,.hpi):hover .pxi .cam{animation:pxk .5s ease-in-out 2}@keyframes pxk{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+:is(.happ,.hpi):hover .pxi .rec{animation:pxo .6s steps(2) infinite}@keyframes pxo{50%{opacity:.15}}
+:is(.happ,.hpi):hover .pxi .wv{animation:pxv 1s ease-in-out infinite}@keyframes pxv{50%{transform:scale(1.15);opacity:.5}}
+:is(.happ,.hpi):hover .pxi .c1{animation:pxd .5s ease-out}:is(.happ,.hpi):hover .pxi .c2{animation:pxd .5s ease-out .25s both}@keyframes pxd{from{stroke-dashoffset:12}to{stroke-dashoffset:0}}
+:is(.happ,.hpi):hover .pxi .tp{animation:pxl .8s ease-in-out}@keyframes pxl{40%{transform:translateY(-7px) rotate(-6deg)}}
+:is(.happ,.hpi):hover .pxi :is(.p1,.p2,.p3){animation:pxj .6s ease-in-out}:is(.happ,.hpi):hover .pxi .p2{animation-delay:.1s}:is(.happ,.hpi):hover .pxi .p3{animation-delay:.2s}@keyframes pxj{40%{transform:translateY(-6px)}}
+:is(.happ,.hpi):hover .pxi :is(.n1,.n2,.n3,.n4){animation:pxp .7s ease-in-out}:is(.happ,.hpi):hover .pxi .n2{animation-delay:.1s}:is(.happ,.hpi):hover .pxi .n3{animation-delay:.2s}:is(.happ,.hpi):hover .pxi .n4{animation-delay:.3s}@keyframes pxp{50%{transform:scale(1.35)}}
+:is(.happ,.hpi):hover .pxi .ln{animation:pxdash .8s linear infinite}@keyframes pxdash{to{stroke-dashoffset:-14}}
+:is(.happ,.hpi):hover .pxi .hm{animation:pxr 2.4s linear infinite}:is(.happ,.hpi):hover .pxi .hh{animation:pxr 8s linear infinite}@keyframes pxr{to{transform:rotate(360deg)}}
+:is(.happ,.hpi):hover .pxi .cd{animation:pxc .7s ease-in-out}@keyframes pxc{40%{transform:rotate(-6deg) translateY(-3px)}75%{transform:rotate(3deg)}}
+:is(.happ,.hpi):hover .pxi .pn{animation:pxw .8s ease-in-out}
+:is(.happ,.hpi):hover .pxi .bl{animation:pxs2 .9s ease-in-out}@keyframes pxs2{15%{transform:rotate(18deg)}35%{transform:rotate(-16deg)}55%{transform:rotate(10deg)}75%{transform:rotate(-6deg)}100%{transform:none}}
+:is(.happ,.hpi):hover .pxi .bg{animation:pxg .5s cubic-bezier(.3,1.8,.5,1) infinite alternate}@keyframes pxg{to{transform:scale(1.3)}}
+:is(.happ,.hpi):hover .pxi .bn{animation:pxu .7s ease-in-out}@keyframes pxu{45%{transform:translateY(-8px) rotate(-12deg)}}
+:is(.happ,.hpi):hover .pxi .co{animation:pxsp .9s ease-in-out}@keyframes pxsp{50%{transform:scaleX(.08)}}
+:is(.happ,.hpi):hover .pxi .cn{animation:pxdrop 1s ease-in infinite}@keyframes pxdrop{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}80%{transform:translateY(16px);opacity:1}100%{transform:translateY(18px);opacity:0}}
+:is(.happ,.hpi):hover .pxi .pg{animation:pxplug .8s ease-in-out}@keyframes pxplug{30%{transform:translate(-4px,2px)}60%{transform:translate(3px,-2px)}}
+:is(.happ,.hpi):hover .pxi .spk{animation:pxt .5s ease-in-out infinite}
+:is(.happ,.hpi):hover .pxi .lp{animation:pxlp 1.4s ease-in-out infinite}@keyframes pxlp{25%{transform:translate(-9px,-6px)}60%{transform:translate(-3px,3px)}}
+:is(.happ,.hpi):hover .pxi .gr{animation:pxr 2.2s linear infinite}
+:is(.happ,.hpi):hover .pxi .sdd{animation:pxpu .8s ease-in-out infinite}@keyframes pxpu{50%{transform:scale(1.1)}}
+:is(.happ,.hpi):hover .pxi .rs{animation:pxr 1.2s linear infinite}
 @media (prefers-reduced-motion:reduce){.pxi,.pxi *{animation:none!important}}
+
+/* Dock por grupos: o bloco de ícones do grupo abre ao passar o mouse (ou tocar) com o detalhamento de cada funcionalidade */
+.hgrp{position:relative;display:flex;align-items:flex-end}
+.hgb{all:unset;cursor:pointer;display:block;border-radius:15px;padding:2px;box-sizing:border-box;pointer-events:auto;transition:transform .14s ease}.hgb:focus-visible{outline:2px solid var(--ac)}
+.hmini{display:grid;grid-template-columns:1fr 1fr;gap:1px;width:46px;height:46px;padding:3px;border-radius:14px;box-sizing:border-box;background:radial-gradient(circle at 50% 25%,color-mix(in srgb,var(--pc) 12%,#fff),color-mix(in srgb,var(--pc) 36%,#fff));box-shadow:0 3px 9px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.85)}
+.hmini span{display:block;width:100%;height:100%}.hmini svg{width:100%;height:100%;animation:none!important}.hmini .sd,.hmini .sp{display:none}
+.hgrp:hover .hgb,.hgrp.open .hgb{transform:scale(1.12)}.hgrp.on .hmini{box-shadow:0 0 0 2px var(--pc),0 3px 9px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.85)}
+.hpop{position:absolute;bottom:100%;left:50%;transform:translate(-50%,6px);padding-bottom:12px;opacity:0;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .28s;z-index:60;width:max-content;max-width:min(92vw,420px)}
+.hgrp:first-child .hpop{left:0;transform:translate(0,6px)}.hgrp:last-of-type .hpop{left:auto;right:0;transform:translate(0,6px)}
+.hgrp:hover .hpop,.hgrp.open .hpop,.hgrp:focus-within .hpop{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .16s,transform .16s,visibility 0s}
+.hgrp:first-child:hover .hpop,.hgrp:first-child.open .hpop,.hgrp:first-child:focus-within .hpop{transform:none}.hgrp:last-of-type:hover .hpop,.hgrp:last-of-type.open .hpop,.hgrp:last-of-type:focus-within .hpop{transform:none}
+.hpop>*{background:color-mix(in srgb,var(--sf) 94%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--ln);box-shadow:0 14px 36px rgba(0,0,0,.28)}
+.hph{padding:8px 14px;border-radius:16px 16px 0 0;border-bottom:0;font-weight:600;font-size:13px;color:var(--ink);box-shadow:none!important}.hpop .hpg{border-radius:0 0 16px 16px;border-top:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:6px 8px 8px}
+.hpi{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:12px;cursor:pointer;color:var(--ink);min-width:178px}.hpi:hover,.hpi:focus-visible{background:var(--ac2)}.hpi:focus-visible{outline:2px solid var(--ac)}.hpi.on{box-shadow:inset 0 0 0 1.5px var(--pc)}
+.hpi .dki{flex:none;width:46px;height:46px;border-radius:13px}.hpt{display:flex;flex-direction:column;min-width:0;line-height:1.2}.hpt b{font-size:13px}.hpt small{font-size:11px;color:var(--mu)}
+@media(max-width:560px){.hdock{overflow:visible}.hpop{max-width:94vw}.hpop .hpg{grid-template-columns:1fr}}

@@ -130,7 +130,23 @@ new MutationObserver(ms => { if (ms.every(m => m.target.closest && m.target.clos
 const APP_GROUPS = [['Clínico', ['tele', 'agenda', 'biblioteca', 'volumes']], ['Pessoas e equipes', ['equipes', 'grafo', 'users', 'hist']], ['Organização', ['tarefas', 'notas', 'notif']], ['Financeiro', ['fin', 'cred', 'credadm']], ['Sistema e privacidade', ['integ', 'audit', 'privpesq', 'cfg']]];
 const grpOf = id => { const n = APP_GROUPS.findIndex(g => g[1].includes(id)); return n < 0 ? APP_GROUPS.length : n; };
 const grouped = apps => { const out = []; let last = -1; for (const a of [...apps].map((x, k) => [x, k]).sort((p, q) => grpOf(p[0][0]) - grpOf(q[0][0]) || (APP_GROUPS[grpOf(p[0][0])] ? APP_GROUPS[grpOf(p[0][0])][1].indexOf(p[0][0]) - APP_GROUPS[grpOf(q[0][0])][1].indexOf(q[0][0]) : p[1] - q[1])).map(x => x[0])) { const g = grpOf(a[0]); if (last >= 0 && g !== last) out.push('SEP'); last = g; out.push(a); } return out; };
-function appDockH() { const act = v => (v === 'biblioteca' ? !!(window.CONSULTA && CONSULTA.K.wins.lib && CONSULTA.K.wins.lib.st !== 'closed') : S.view === v); return `<nav class="hdock" aria-label="Funcionalidades">${grouped(HOME_APPS.filter(a => a[4]() && !dHidden(a[0]))).map(x => x === 'SEP' ? '<i class="hsep" aria-hidden="true"></i>' : (([v, t, i, c]) => `<button class="happ ${act(v) ? 'on' : ''}" data-a="adk" data-p="${v}" style="--pc:${c}" aria-pressed="${act(v)}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki ${window.PXI && PXI[v] ? 'px' : ''}">${window.PXI && PXI[v] ? PXI[v] : ic(i, 26)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`)(x)).join('')}</nav>`; }
+const GCOL = ['#2481cc', '#7a5bd6', '#e0a526', '#2a9d8f', '#5b6b7c'];
+const appIcon = (v, i) => (window.PXI && PXI[v] ? PXI[v] : ic(i, 26));
+function appDockH() {
+  const act = v => (v === 'biblioteca' ? !!(window.CONSULTA && CONSULTA.K.wins.lib && CONSULTA.K.wins.lib.st !== 'closed') : S.view === v);
+  const apps = HOME_APPS.filter(a => a[4]() && !dHidden(a[0])), bucket = new Map();
+  for (const a of apps) { const n = grpOf(a[0]); if (!bucket.has(n)) bucket.set(n, []); bucket.get(n).push(a); }
+  const single = ([v, t, i, c]) => `<button class="happ ${act(v) ? 'on' : ''}" data-a="adk" data-p="${v}" style="--pc:${c}" aria-pressed="${act(v)}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki ${window.PXI && PXI[v] ? 'px' : ''}">${appIcon(v, i)}</span><span class="htip" role="tooltip"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`;
+  const item = ([v, t, i, c]) => `<button class="hpi ${act(v) ? 'on' : ''}" role="menuitem" data-a="adk" data-p="${v}" style="--pc:${c}" aria-label="${t}: ${HDESC[v] || ''}"><span class="dki ${window.PXI && PXI[v] ? 'px' : ''}">${appIcon(v, i)}</span><span class="hpt"><b>${ES(t)}</b><small>${ES(HDESC[v] || '')}</small></span></button>`;
+  const parts = [...bucket.keys()].sort((a, b) => a - b).map(n => {
+    const l = bucket.get(n).sort((a, b) => (APP_GROUPS[n] ? APP_GROUPS[n][1].indexOf(a[0]) - APP_GROUPS[n][1].indexOf(b[0]) : 0)); if (l.length === 1 || !APP_GROUPS[n]) return l.map(single).join('');
+    const name = APP_GROUPS[n][0], on = l.some(a => act(a[0])), col = GCOL[n % GCOL.length];
+    return `<div class="hgrp ${on ? 'on' : ''}" data-g="${n}" style="--pc:${col}"><button class="hgb" data-a="hgrp" data-p="${n}" aria-haspopup="menu" aria-label="${ES(name)}: ${l.map(a => a[1]).join(', ')}"><span class="hmini">${l.slice(0, 4).map(a => `<span>${appIcon(a[0], a[2])}</span>`).join('')}</span></button><div class="hpop" role="menu" aria-label="${ES(name)}"><div class="hph">${ES(name)}<span class="mu"> · ${l.length} ${ES('funcionalidades')}</span></div><div class="hpg">${l.map(item).join('')}</div></div></div>`;
+  });
+  return `<nav class="hdock" aria-label="Funcionalidades">${parts.join('<i class="hsep" aria-hidden="true"></i>')}</nav>`;
+}
+A.hgrp = (n, el) => { const g = el.closest('.hgrp'), was = g.classList.contains('open'); document.querySelectorAll('.hgrp.open').forEach(x => x.classList.remove('open')); if (!was) g.classList.add('open'); };
+document.addEventListener('click', e => { if (!e.target.closest('.hgrp')) document.querySelectorAll('.hgrp.open').forEach(x => x.classList.remove('open')); else if (e.target.closest('.hpi')) document.querySelectorAll('.hgrp.open').forEach(x => x.classList.remove('open')); });
 A.adk = v => { if (v === 'biblioteca') { const w = window.CONSULTA && CONSULTA.K.wins.lib; if (w && w.st && w.st !== 'closed') { CONSULTA.closeAll(); render(); } else A.view('biblioteca'); return; } if (S.view === v) A.gohome(); else A.view(v); };
 const dockIcon = (p, on) => `<button class="dk ${on ? 'on' : ''}" data-a="dkc" data-p="${p.id}" style="--pc:${p.c}" aria-pressed="${on}" aria-label="${on ? 'Minimizar' : 'Abrir'} painel ${p.t}" title="${p.t}"><span class="dki">${ic(p.i, 24)}</span><span class="dkt">${ES(p.t)}</span></button>`;
 function dashH(v) {
