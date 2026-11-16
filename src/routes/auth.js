@@ -19,7 +19,7 @@ export default async function (app) {
     return { id: u.id, name: u.name, role: u.role, lang: u.lang };
   });
   app.post('/api/logout', { preHandler: app.auth }, async (req, rep) => { forget(req.user.sub); await audit(req, 'logout', 'user', req.user.sub); rep.clearCookie('t', { path: '/' }); return { ok: true }; });
-  app.get('/api/me', { preHandler: app.auth }, async req => (await q('select id,name,username,role,cargo,lang,ai_consent,ask_reason,must_change,is_root,presence,country,decline_msg,research_consent from users where id=$1', [req.user.sub]))[0]);
+  app.get('/api/me', { preHandler: app.auth }, async req => ({ open_default: process.env.VIEW_OPEN_DEFAULT || 'todos', ...(await q('select id,name,username,role,cargo,lang,ai_consent,ask_reason,must_change,is_root,presence,country,decline_msg,research_consent from users where id=$1', [req.user.sub]))[0] }));
   app.post('/api/me/password', { preHandler: app.auth, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (req, rep) => {
     const b = z.object({ current: z.string().min(1).max(200), next: z.string().min(12, 'A nova senha precisa ter ao menos 12 caracteres').max(200) }).parse(req.body), [u] = await q('select * from users where id=$1', [req.user.sub]);
     if (!(await argon2.verify(u.pw_hash, b.current))) return rep.code(400).send({ error: 'Senha atual incorreta' });

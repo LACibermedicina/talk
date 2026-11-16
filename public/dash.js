@@ -206,7 +206,17 @@ document.addEventListener('dblclick', e => { const h = e.target.closest && e.tar
 addEventListener('resize', () => { if (isDash() && S.me) { clearTimeout(S.rzT); S.rzT = setTimeout(render, 200); } });
 // ao abrir um item de gestão, carrega os dados do dashboard
 const _v10 = A.view;
-A.view = p => { S.dwm = false; if (!window.M3D_KEEP && S.me && DD(p) && S.view !== p) closeAllPanels(p); return _v10(p); };
+// Como a funcionalidade abre: padrão = todos os painéis abertos. O usuário escolhe o seu modo em Configurações; sem escolha vale o padrão do administrador.
+const OPEN_MODES = [['todos', 'Abrir todos os painéis', 'Todos os painéis abrem ao entrar na funcionalidade (a posição e o tamanho que você deu são mantidos).'], ['lembrar', 'Lembrar como deixei', 'Cada funcionalidade abre com os painéis abertos, fechados ou reduzidos como você os deixou.'], ['reduzidos', 'Abrir reduzidos', 'Os painéis começam como ícones ao lado da barra; abra só os que quiser.'], ['fechados', 'Começar vazio', 'Nenhum painel abre; escolha pela barra de ações da funcionalidade.']];
+const openMode = () => { const u = S.me && lay().open; if (u && OPEN_MODES.some(m => m[0] === u)) return u; const d = S.me && S.me.open_default; return OPEN_MODES.some(m => m[0] === d) ? d : 'todos'; };
+function applyOpenMode(v) { const D = DD(v); if (!D) return; const m = openMode(); if (m === 'lembrar') return; if (m === 'fechados') return closeAllPanels(v); D.panels.forEach(p => { if (m === 'reduzidos') setSt(v, p.id, { st: 'min' }); else setOpen(v, p.id, 'open'); }); }
+A.view = p => { S.dwm = false; if (!window.M3D_KEEP && S.me && DD(p) && S.view !== p) closeAllPanels(p); if (S.me && DD(p) && S.view !== p) { try { applyOpenMode(p); } catch { /* segue */ } } return _v10(p); };
+const _dskCard = dskCard;
+dskCard = function () {
+  const cur = (lay().open && OPEN_MODES.some(m => m[0] === lay().open)) ? lay().open : 'padrao', adm = S.me && S.me.role === 'admin', dflt = OPEN_MODES.some(m => m[0] === (S.me && S.me.open_default)) ? S.me.open_default : 'todos', nm = k => (OPEN_MODES.find(m => m[0] === k) || [])[1] || '';
+  return `<div class="cd dtt" style="margin-top:12px"><h3>${ES('Ao abrir uma funcionalidade')}</h3><p class="mu">${ES('Por padrão, todos os painéis abrem ao entrar numa funcionalidade.')}</p><label for="opm">${ES('Minha preferência')}</label><select id="opm" data-i="openmode"><option value="padrao" ${cur === 'padrao' ? 'selected' : ''}>${ES('Padrão do sistema')} (${ES(nm(dflt))})</option>${OPEN_MODES.map(m => `<option value="${m[0]}" ${cur === m[0] ? 'selected' : ''}>${ES(m[1])}</option>`).join('')}</select><p class="mu">${ES((OPEN_MODES.find(m => m[0] === (cur === 'padrao' ? dflt : cur)) || [])[2] || '')}</p>${adm ? `<label for="opa">${ES('Padrão do sistema (todos os usuários que não escolheram)')}</label><select id="opa" data-i="openmodeadm">${OPEN_MODES.map(m => `<option value="${m[0]}" ${dflt === m[0] ? 'selected' : ''}>${ES(m[1])}</option>`).join('')}</select>` : ''}</div>` + _dskCard();
+};
+document.addEventListener('change', e => { const t = e.target, k = t.dataset && t.dataset.i; if (k === 'openmode') { const L = lay(); L.open = t.value === 'padrao' ? undefined : t.value; saveLay(); toast('Preferência salva'); render(); } else if (k === 'openmodeadm') { api('/admin/settings', { m: 'PUT', b: { settings: { VIEW_OPEN_DEFAULT: t.value } } }).then(() => { S.me.open_default = t.value; toast('Padrão do sistema atualizado'); render(); }).catch(x => toast(x.message)); } });
 
 /* ---------- atalhos do chat conforme o interlocutor ---------- */
 function pillsH() {
